@@ -13,3 +13,6 @@ src-tauri/icons/android/
 src-tauri/icons/ios/
 src-tauri/icons/Square*.png
 src-tauri/icons/StoreLogo.png
+
+# Local course references and full verification logs (never publish).
+.local/

@@ -65,7 +65,7 @@ describe('browser starter initial rendering', () => {
     vi.stubGlobal('location', { search: `?model=${model.id}`, href: `http://localhost/?model=${model.id}` })
     vi.stubGlobal('localStorage', undefined)
     const html = renderToStaticMarkup(<App />)
-    expect(html).toContain(`<h1>${model.title}</h1>`)
+    expect(html).toContain(renderToStaticMarkup(<h1>{model.title}</h1>))
     expect(html).toContain('aria-label="Simulation playback"')
     expect(html).not.toMatch(/\b(?:NaN|Infinity)\b/)
   })

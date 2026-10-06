@@ -1,78 +1,32 @@
 # App brief
 
-Fill this with facts from the user's request. Replace bracketed placeholders only when known; use “not needed” where appropriate. This is a working brief, not a prerequisite form. Record justified assumptions and continue work that does not depend on missing answers.
+## Purpose and delivery
 
-## Purpose and scope
+Physiks · Materials (`physiks-materials-kadencsmith`) helps an ENGR330 student reason through the supplied practice exam. Deliverable: runnable browser app and a new public `KadenCSmith/Physiks-Materials` repository. The user explicitly authorized creating and publishing the new repository. No backend, login, assessment service, dependency upgrade, hosting deployment, or desktop installer is needed. The existing black cinematic shell is retained.
 
-- App name / unique app ID: [to determine]
-- Intended user and task: [to determine]
-- What the user should understand or accomplish: [to determine]
-- Requested deliverable: [local preview, repository, deployment, or other stated result]
-- In scope: [requested behavior]
-- Out of scope: [explicit exclusions]
-- Interface changes requested: [none stated; retain the existing cinematic shell unless requested]
-- Acceptance example: [a concrete user action and the expected visible result]
+Template: package 0.3.2, base commit `886f2c0b1d4569f4e8b05726945827dac1afdde3`. Generated modules replace all new-model scaffold calculations. Original template examples are retained only for regression tests. A unique local-storage identity isolates this app's settings.
 
-## Models
+## Models and conventions
 
-Repeat this block for each model.
+| ID | Rules and initial example | Limits and undefined cases |
+|---|---|---|
+| crystals | BCC, R=1 Å, direction tail (0,0,1) to head (1/2,0,0), [1 0 −2]. Head minus tail; integerize rational coordinates. Plane indices use reciprocal intercepts; zero parameter means parallel axis, not zero intercept. Counts SC/BCC/FCC 1/2/4; neighbors 6/8/12. BCC (200) density 3/(16R²). | Coordinates in cell; supported rational denominator ≤64. Coincident directions and all-parallel planes are flagged. Origin-crossing B is translated before intercept calculation. BCC density view fixes BCC structure. Radius 0.1–3 Å is illustrative, not measured exam data. |
+| defects | Formal PtO3 host: Pt6+, O2−; Ta2O5: Ta5+. Default cation Frenkel, notation Ta on Pt with effective −1, 1000 K, activation interpretation. Charge = species absolute charge minus normal occupant charge. Seven reactions have explicit site and surface reservoirs. | Temperature 300–2000 K. Charges −8…8. Reaction selection is a documented finite set, not a chemical mechanism predictor. Formation-energy mode is conditional; pair and four-vacancy cluster exponents differ. Large site fractions violate dilution. |
+| order | Crystal/BCC candidate, first distance 2.78 Å, shell radius 3.05 Å, density 0.06 Å⁻³. N=4πρ∫r²g(r)dr. Crystal shell broadening 0.025 Å conserves count. Gas g=1; seeded particles are reproducible. | Radius 0.1–6.5 Å; density 0.01–0.12 Å⁻³. Later crystal shells, polymer mixture and small projected particle samples are stated idealizations. No element identification. Circuit is independent of the exam's undirected screw surface; b joins finish to start, reversing it changes sign. |
+| phases | Default 10 at% Pt / 1500 °C: (Cr)+Cr4Pt; endpoints 6.4/17.5 at%, atom fractions 0.675675…/0.324324…. At 1400 °C two schematic supporting tangents connect stable phase fields. F=3−P at fixed pressure. | Solver 0–35 at% / 1400–1530 °C, piecewise interpolation of stored graph readings ±0.5 at%. A weight interpretation of 10% would give a different state. At 1530 °C / compound–Pt coexistence, three fractions are withheld. Energy curves and full overview are schematic. |
 
-### [Model title / kebab-id]
+Direction arrows use 6-second reveals; all other views use 12-second **nonperiodic conceptual** reveals and a deterministic numerical snapshot. No animation rate is interpreted as a migration or cooling rate. Static curves/geometry are memoized or precomputed; numeric substitutions use the template formatter without rounding internal calculations.
 
-- Purpose: [what this model represents]
-- Governing equation or rule: [source-backed or explicitly derived equation]
-- State and coordinate/sign conventions: [definitions]
-- Initial conditions: [definitions and values, if specified]
-- Assumptions and validity limits: [linearization, boundary conditions, supported domain, etc.]
-- Undefined/singular cases and intended handling: [to determine]
-- Playback: [periodic or nonperiodic; justified duration/window; endpoint behavior]
-- Interaction: [what dragging/keyboard/control changes mean]
-- Readouts and plotted quantities: [snapshot keys, labels, units]
-- Essential learning content: [equations, substitutions, derivation steps]
+Parameter keys, exact ranges/defaults, and snapshot readout definitions are authoritative in each `model.ts` and `calculation.ts`; source units and graph uncertainty are in `phases/boundaries.ts`.
 
-| Parameter key | Meaning / symbol | Unit | Default | Min | Max | Step | Source or rationale |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [key] | [meaning] | [unit or dimensionless] | [known value] | [limit] | [limit] | [increment] | [reference or stated assumption] |
+## Teaching and acceptance
 
-| Snapshot key | Meaning | Unit | Calculation or relationship |
-| --- | --- | --- | --- |
-| [key] | [definition] | [unit] | [equation] |
+Learn follows predict → inspect → reveal → substitute → interpret → try nearby. Explore shows the current calculation. Practice uses finite checked answers and targeted hints. Each lab supplies an easy-number and exam example; lecture choices are attributed only to actual inspected frames. Controls, lesson substitutions, scene, and live values use the same parameters/snapshot.
 
-## References and decisions
+Acceptance examples: [1 0 −2] retains its overbar; translated B gives (2 1 −1); BCC a=2 Å gives 0.25 atoms/Å²; Ta on Pt gives −1 while retaining absolute +5; first BCC shell integrates to 8; gas R=2 Å gives N≈2.010619; exam phase fractions sum to one and conserve 10 at%.
 
-| Reference | Exact location | Facts used | Ambiguity / correction / assumption |
-| --- | --- | --- | --- |
-| [file or URL] | [page, figure, section, or timestamp] | [equation, geometry, data] | [explicitly stated; do not invent] |
+The required automated checks and Chrome walkthrough are recorded in [VERIFICATION.md](VERIFICATION.md). All exam-topic coverage and exact source locations are in [MATERIALS_COVERAGE.md](MATERIALS_COVERAGE.md) and [SOURCE_MANIFEST.md](SOURCE_MANIFEST.md).
 
-- Source material authorized for inclusion in the app/repository: [to determine from the user's scope]
-- Derived additions and their rationale: [to determine]
-- Open questions that block a correct result: [none identified, or list]
-- Decisions that can proceed without more input: [reasonable assumptions, if needed]
+## Publication and remaining limits
 
-## Desktop distribution, when requested
-
-- Target platforms: [macOS arm64 and x64, Windows x64, Linux x64, or the requested subset]
-- Package name / version: [to determine; release tag must match `v<package version>`]
-- App title / unique app ID: [defaults from `src/app.config.ts`; record intended identity]
-- Installer product metadata overrides: [derived from `src/app.config.ts` and `package.json` through `desktop/identity.cjs` and `desktop/build-config.mjs`]
-- Icons: [owner-provided assets and paths, or existing defaults retained]
-- Release repository / tag: [to determine from the requested delivery]
-- Signing / notarization: [owner-supplied identity and configured secret names, or not configured; never paste secret values]
-- Platforms available for manual testing: [to determine; distinguish build success from opening/testing]
-- Distribution limitations to communicate: [actual unsigned/unnotarized or untested status, if applicable]
-
-## Acceptance and evidence
-
-| Check | Expected result | Evidence after implementation |
-| --- | --- | --- |
-| Initial state / representative calculation | [independently expected values with tolerance] | [not yet checked] |
-| Parameter limits and special cases | [defined behavior; finite supported samples] | [not yet checked] |
-| Scene, readouts, equations, plots | [consistent geometry, signs, units, and time] | [not yet checked] |
-| Interaction and playback | [required actions; Pause intent preserved] | [not yet checked] |
-| Finder, Toolbox, keyboard, narrow layout | [usable and readable] | [not yet checked] |
-| Automated checks | [`npm run check` passes] | [not yet run] |
-| Desktop app, if requested | [builds; correct window title/branding; packaged controls and playback work] | [not yet built/opened] |
-| Release downloads, if requested | [requested platform assets attached; actual signing status documented] | [not yet released/verified] |
-
-- Remaining limitations to communicate: [none established yet]
-- Final requested delivery location: [to determine]
+The user's request authorizes a new repository containing the derived app. Full PDF, extracted exam figures, lecture captures and transcripts are local ignored reference material. No claim of publication rights for course captures is made. Only app screenshots are committed. Source access gaps do not block any exam-based lab; complete lecture review, measured thermodynamics/kinetics, learning gains, native installers, and cross-platform manual verification are outside verified evidence.

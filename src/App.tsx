@@ -68,7 +68,7 @@ function Workspace() {
   // on every animation frame. Their own state/context updates still work.
   const chrome = useMemo(() => <AppChrome config={appConfig} models={models} activeId={activeId} onModel={selectModel} onResetView={resetView} />, [activeId, selectModel, resetView])
   const toolbox = useMemo(() => <ToolboxPortal><section><p className="control-context">{model.title}</p><p>Changing a value restarts the model from its initial condition.</p>{model.controls.map(control => <ParameterControl key={`${model.id}-${control.key}`} definition={control} value={parameters[control.key]} onChange={value => update(control.key, value)} />)}<div className="toolbox-actions"><button onClick={restore}>Restore example values</button></div></section></ToolboxPortal>, [model, parameters, update, restore])
-  const toolboxExtras = useMemo(() => <ToolboxPortal extra><div className="toolbox-actions"><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>Diagram labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>Force overlays</button></div><p>Viewing speed and overlays are separate from the model’s values.</p></ToolboxPortal>, [display])
+  const toolboxExtras = useMemo(() => <ToolboxPortal extra><div className="toolbox-actions"><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>Diagram labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>Teaching overlays</button></div><p>Viewing speed and overlays are separate from the model’s values.</p></ToolboxPortal>, [display])
   const finder = useMemo(() => <FinderPortal documentation><FormulaLibrary models={models} activeId={activeId} query={ui.query} onModel={id => { selectModel(id); ui.open(null) }} /></FinderPortal>, [activeId, ui.query, ui.open, selectModel])
   const { Scene, Lesson, Details } = model
   return <>
@@ -77,7 +77,7 @@ function Workspace() {
       <div className="workspace-heading"><div><span className="eyebrow">{model.eyebrow ?? appConfig.title} / {String(models.indexOf(model)+1).padStart(2, '0')}</span><h1>{model.title}</h1><p>{model.description}</p></div></div>
       <div className="workspace-grid">
         <div className="visual-workspace">
-          <div className="scene-toolbar"><span>{model.interactionHint ?? 'Explore the current model in Toolbox'}</span><div><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>forces</button></div></div>
+          <div className="scene-toolbar"><span>{model.interactionHint ?? 'Explore the current model in Toolbox'}</span><div><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>overlays</button></div></div>
           <Scene parameters={parameters} snapshot={snapshot} display={display} onParameterChange={update} onInteractionStart={startInteraction} onInteractionEnd={endInteraction} />
           <div className="live-readouts" aria-label="Live model values">{readouts.map(readout => <div key={readout.label} className={`${readout.tone ?? 'neutral'}-readout`}><span>{readout.label}</span><output>{format(readout.value)}<small>{readout.unit ? ` ${readout.unit}` : ''}</small></output></div>)}</div>
           {Details && <Details parameters={parameters} snapshot={snapshot} time={clock.time} />}
@@ -86,7 +86,7 @@ function Workspace() {
         </div>
         <Lesson parameters={parameters} snapshot={snapshot} time={clock.time} />
       </div>
-      <footer className="workspace-footer">{appConfig.description} · default viewing speed {format(appConfig.defaultSpeed)}× · model equations use physical time</footer>
+      <footer className="workspace-footer">{appConfig.description} · default viewing speed {format(appConfig.defaultSpeed)}× · playback shows conceptual progress</footer>
     </main>
     {toolbox}
     {toolboxExtras}
