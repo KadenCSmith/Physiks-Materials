@@ -13,7 +13,7 @@ Tested on the user's Mac in **Google Chrome / Kaden profile**, October 6, 2026. 
 | Direction timing | 6-second direction window and matching sample progress; 12-second windows for other views; nonperiodic endpoints retained |
 | Change hygiene | `git diff --check` passed; raw course material under ignored `.local/` |
 
-Full installation/check logs are retained locally in `.local/logs/`. Vite reports two dependency `use client` directives ignored while bundling lucide-react; the build succeeds. No app lint warnings remain.
+Full installation/check logs are retained locally in `.local/logs/`. Earlier builds reported two dependency `use client` directives ignored while bundling lucide-react; the final build succeeds. No app lint warnings remain.
 
 ## Live browser walkthrough
 
@@ -30,10 +30,16 @@ Learn Next/Back and Explore/Practice switches were exercised. Finder “chemical
 
 Screenshots of the recreated app: [A desktop](screenshots/crystals-desktop.jpg), [B desktop](screenshots/defects-desktop.jpg), [C desktop](screenshots/order-desktop.jpg), [D desktop](screenshots/phases-desktop.jpg), and the corresponding `*-narrow.jpg` files. Some full-page captures include the fixed header/transport at the current scroll position. Local lecture evidence is separate and ignored.
 
+## Public deployment
+
+The [public repository](https://github.com/KadenCSmith/Physiks-Materials) and [published app](https://kadencsmith.github.io/Physiks-Materials/) are available. [GitHub Actions run 37435284897](https://github.com/KadenCSmith/Physiks-Materials/actions/runs/37435284897) passed the full checks and deployed the production build with Node 24.
+
+The published app was loaded in the same Chrome / Kaden profile. All four labs opened, and their Practice answers were accepted: A `[−1 1 0]`, B `−1`, C `2.01`, and D `0.5`. The published phase lesson showed the 6.4/17.5 at% endpoints and 0.676/0.324 fractions without KaTeX errors. The published direction view displayed its six-second window, reached 6/6 s, and rendered the signed `[1 0 −2]` arrow. Other views retained twelve-second windows. [Published-app screenshot](screenshots/public-app.jpg).
+
 ## Unverified / outside measured evidence
 
 - A separate hidden-tab suspension test could not be completed: browser tools activate the inspected tab, and native tab switching was interrupted by user activity. The template's existing visibility guard is retained. No claim of a passed hidden-tab test is made.
 - Complete playlist review, complete instructor Gibbs sketch, unreadable element handwriting, shared conversation and older discovery videos are unverified; see source manifest. All exam-based labs are complete.
 - Graph boundaries remain approximate; no assessed thermodynamic dataset or quantitative defect kinetics was supplied. Gibbs curves, polymer mixture, overview and cooling are stated idealizations.
 - Native installers, signing/notarization, manual Windows/Linux/Safari checks, physical validation, FPS and measured learning gains were not run or claimed.
-- Production build passed; the local `npm run preview` server was not separately started. Public Pages loading is verified separately after deployment.
+- Production build and public Pages loading passed; the local `npm run preview` server was not separately started.
