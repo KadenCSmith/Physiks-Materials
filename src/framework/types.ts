@@ -52,6 +52,7 @@ export interface SimulationSceneProps {
   onInteractionStart: () => void
   onInteractionEnd: () => void
   onOpenControls?: () => void
+  onSeek?: (time: number) => void
 }
 export interface SimulationLessonProps {
   parameters: NumericParameters
@@ -63,6 +64,20 @@ export interface SimulationControlsProps {
   snapshot: NumericSnapshot
   onParameterChange: (key: string, value: number) => void
   onParametersChange: (values: NumericParameters) => void
+}
+export type SnapshotReportCell = string | { tex: string }
+export interface SnapshotReportSection {
+  title: string
+  notes?: string[]
+  tex?: string[]
+  rows?: { label: string; value: string }[]
+  table?: { headers: string[]; rows: SnapshotReportCell[][] }
+}
+export interface SnapshotReport {
+  title: string
+  description: string
+  sections: SnapshotReportSection[]
+  sources: string[]
 }
 
 /** Register a model without changing the shell. All numeric quantities use the units declared by the model. */
@@ -79,6 +94,8 @@ export interface SimulationDefinition {
   getReadouts: (parameters: NumericParameters, snapshot: NumericSnapshot) => Readout[]
   /** Snapshot facts and caveats for exports, independent of the active lesson step. */
   getSnapshotNotes?: (parameters: NumericParameters, snapshot: NumericSnapshot, format?: (value: number) => string) => string[]
+  /** A focused export for the active task; other models use the shared full-method report. */
+  getSnapshotReport?: (parameters: NumericParameters, snapshot: NumericSnapshot, format?: (value: number) => string) => SnapshotReport
   Scene: ComponentType<SimulationSceneProps>
   Lesson: ComponentType<SimulationLessonProps>
   Details?: ComponentType<SimulationLessonProps>

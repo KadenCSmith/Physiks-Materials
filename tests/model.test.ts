@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSessions, defineSimulation, resolveModelId, sanitizeParameters, validateAppConfig, validateModelSamples, validateRegistry } from '../src/framework/model'
-import type { AppConfig, NumericSnapshot, SimulationDefinition } from '../src/framework/types'
+import type { AppConfig, NumericSnapshot, SimulationDefinition, SnapshotReport } from '../src/framework/types'
 
 function fixture(id = 'example'): SimulationDefinition {
   return {
@@ -175,6 +175,58 @@ describe('actionable model health checks', () => {
     expect(() => validateModelSamples(model)).toThrow(/snapshot-notes \[defaults\] t=0 getSnapshotNotes: expected an array of nonempty notes/)
     model.getSnapshotNotes = () => { throw new Error('Missing geometry') }
     expect(() => validateModelSamples(model)).toThrow(/getSnapshotNotes: Missing geometry/)
+  })
+
+  it('checks focused reports at every sampled state, including equation and table math', () => {
+    const model = fixture('focused-report')
+    const seen: string[] = [], math: string[] = []
+    model.getSnapshotReport = (p, s) => {
+      seen.push(`${p.position},${p.rate}:${s.value}`)
+      return { title: 'Current result', description: 'Current values and method.', sources: ['Exam p4'],
+        sections: [{ title: 'Calculation', tex: ['x=vt'], notes: ['An assumption.'],
+          rows: [{ label: 'Current value', value: String(s.value) }],
+          table: { headers: ['Quantity', 'Value'], rows: [['Rate', { tex: 'v=2' }]] } }] }
+    }
+    expect(validateModelSamples(model, { validateTex: tex => { math.push(tex) } }).samplePoints).toBe(15)
+    expect(seen).toHaveLength(15)
+    expect(seen).toContain('0.5,10:40.5')
+    expect(math.filter(tex => tex === 'x=vt')).toHaveLength(15)
+    expect(math.filter(tex => tex === 'v=2')).toHaveLength(15)
+  })
+
+  it('names malformed focused report fields and preserves callback errors', () => {
+    const model = fixture('bad-report')
+    const good: SnapshotReport = { title: 'Result', description: 'Description', sources: ['Exam'], sections: [{ title: 'Calculation' }] }
+    const invalid = [
+      [null, /provide a title, description, sections and source strings/],
+      [{ ...good, sources: [undefined] }, /source strings/],
+      [{ ...good, sections: [] }, /sections and source strings/],
+      [{ ...good, sections: [{ title: ' ' }] }, /sections\[0\]: provide a nonempty section title/],
+      [{ ...good, sections: [{ title: 'Notes', notes: [1] }] }, /sections\[0\].notes: expected nonempty strings/],
+      [{ ...good, sections: [{ title: 'Rows', rows: [{ label: 'x', value: Infinity }] }] }, /sections\[0\].rows: expected labeled string values/],
+      [{ ...good, sections: [{ title: 'Table', table: { headers: ['x', 'y'], rows: [['x']] } }] }, /table.rows\[0\]: every row must match the header count/],
+      [{ ...good, sections: [{ title: 'Table', table: { headers: ['x'], rows: [[{ tex: '' }]] } }] }, /table.rows\[0\]\[0\]: expected text or a TeX cell/],
+    ] as const
+    for (const [report, expected] of invalid) {
+      model.getSnapshotReport = () => report as unknown as SnapshotReport
+      expect(() => validateModelSamples(model)).toThrow(expected)
+    }
+    model.getSnapshotReport = () => { throw new Error('Missing active case') }
+    expect(() => validateModelSamples(model)).toThrow(/bad-report \[defaults\] t=0 getSnapshotReport: Missing active case/)
+  })
+
+  it('identifies invalid report math precisely while keeping math parsing optional', () => {
+    const model = fixture('bad-report-math')
+    model.getSnapshotReport = () => ({ title: 'Result', description: 'Description', sources: ['Exam'],
+      sections: [{ title: 'Calculation', tex: ['bad-equation'], table: { headers: ['Value'], rows: [[{ tex: 'bad-cell' }]] } }] })
+    expect(() => validateModelSamples(model)).not.toThrow()
+    try {
+      validateModelSamples(model, { validateTex: tex => { throw new Error(`Unknown ${tex}`) } })
+      expect.unreachable('Invalid report math must fail the health check')
+    } catch (error) {
+      expect(String(error)).toContain('getSnapshotReport sections[0].tex[0]: Unknown bad-equation')
+      expect(String(error)).toContain('getSnapshotReport sections[0].table.rows[0][0].tex: Unknown bad-cell')
+    }
   })
 })
 

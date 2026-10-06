@@ -10,23 +10,30 @@ import { orderModel } from '../src/models/order/model'
 import { phasesModel } from '../src/models/phases/model'
 
 describe('scientific context in downloadable snapshots', () => {
-  it('distinguishes the trial species charge from effective charge and the selected fixed reaction', () => {
+  it('distinguishes absolute and effective trial charge without mixing inactive tasks', () => {
     const p = { ...defectsModel.defaults, species: 2, site: 0, charge: -1, reaction: 3 }
     const notes = defectNotes(p, defectSample(p, 12)).join('\n')
     expect(notes).toContain('Ta on Pt site; absolute species charge +5, normal occupant charge +6, expected effective charge -1')
     expect(notes).toContain('Proposed effective charge -1 matches')
-    expect(notes).toContain('Ta substitution · oxygen vacancy')
-    expect(notes).toContain('trial symbol does not alter this fixed reaction')
-    expect(notes).toContain('Activation barriers alone do not establish equilibrium defect populations')
+    expect(notes).not.toContain('Ta substitution · oxygen vacancy')
+    expect(notes).not.toContain('Activation mode')
   })
 
-  it('labels fractional trial charges invalid and distinguishes conditional formation data from lecture evidence', () => {
+  it('labels fractional trial charges invalid and scopes formation assumptions and lecture evidence to their tasks', () => {
     const p = { ...defectsModel.defaults, charge: -.9, reference: 1, reaction: 6, energyMode: 1 }
     const notes = defectNotes(p, defectSample(p, 12)).join('\n')
     expect(notes).toContain('is invalid: dots and primes require a whole number')
-    expect(notes).toContain('K^(1/4)')
-    expect(notes).toContain('violate the dilute approximation')
-    expect(notes).toContain('current reaction differs from that inspected example')
+    expect(notes).not.toContain('K^(1/4)')
+    expect(notes).not.toContain('lecture reference')
+    const energy = { ...p, topic: 2 }
+    const energyNotes = defectNotes(energy, defectSample(energy, 12)).join('\n')
+    expect(energyNotes).toContain('K^(1/4)')
+    expect(energyNotes).toContain('too large for the dilute approximation')
+    expect(energyNotes).not.toContain('Current trial notation')
+    const reaction = { ...p, topic: 1 }
+    expect(defectNotes(reaction, defectSample(reaction, 12)).join('\n')).not.toContain('Loaded lecture reference')
+    reaction.reaction = 3
+    expect(defectNotes(reaction, defectSample(reaction, 12)).join('\n')).toContain('Loaded lecture reference')
   })
 
   it('exports the current gas limit without attributing BCC geometry to a gas', () => {

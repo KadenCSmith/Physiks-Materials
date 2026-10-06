@@ -278,6 +278,52 @@ export function validateModelSamples(model: SimulationDefinition, options: Model
           }
         } catch (error) { errors.push(`${point} getSnapshotNotes: ${failureMessage(error)}`) }
       }
+      if (model.getSnapshotReport) {
+        const reportPoint = `${point} getSnapshotReport`
+        const text = (value: unknown): value is string => typeof value === 'string' && Boolean(value.trim())
+        const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(text)
+        const math = (tex: string, location: string) => {
+          if (!options.validateTex) return
+          try { options.validateTex(tex) }
+          catch (error) { errors.push(`${reportPoint} ${location}: ${failureMessage(error)}`) }
+        }
+        try {
+          const report: unknown = model.getSnapshotReport({ ...parameters }, { ...numeric })
+          if (!isRecord(report) || !text(report.title) || !text(report.description)
+            || !Array.isArray(report.sections) || !report.sections.length || !strings(report.sources)) {
+            errors.push(`${reportPoint}: provide a title, description, sections and source strings.`)
+          } else report.sections.forEach((section: unknown, index: number) => {
+            const location = `sections[${index}]`
+            if (!isRecord(section) || !text(section.title)) {
+              errors.push(`${reportPoint} ${location}: provide a nonempty section title.`)
+              return
+            }
+            if (section.notes !== undefined && !strings(section.notes)) errors.push(`${reportPoint} ${location}.notes: expected nonempty strings.`)
+            if (section.tex !== undefined) {
+              if (!strings(section.tex)) errors.push(`${reportPoint} ${location}.tex: expected nonempty equations.`)
+              else section.tex.forEach((tex: string, equation: number) => math(tex, `${location}.tex[${equation}]`))
+            }
+            if (section.rows !== undefined && (!Array.isArray(section.rows)
+              || section.rows.some((row: unknown) => !isRecord(row) || !text(row.label) || !text(row.value)))) {
+              errors.push(`${reportPoint} ${location}.rows: expected labeled string values.`)
+            }
+            if (section.table !== undefined) {
+              const table = section.table
+              if (!isRecord(table) || !strings(table.headers) || !table.headers.length || !Array.isArray(table.rows)) {
+                errors.push(`${reportPoint} ${location}.table: expected headers and rows.`)
+              } else table.rows.forEach((row: unknown, rowIndex: number) => {
+                if (!Array.isArray(row) || row.length !== (table.headers as string[]).length) {
+                  errors.push(`${reportPoint} ${location}.table.rows[${rowIndex}]: every row must match the header count.`)
+                } else row.forEach((cell: unknown, cellIndex: number) => {
+                  if (text(cell)) return
+                  if (isRecord(cell) && text(cell.tex)) math(cell.tex as string, `${location}.table.rows[${rowIndex}][${cellIndex}].tex`)
+                  else errors.push(`${reportPoint} ${location}.table.rows[${rowIndex}][${cellIndex}]: expected text or a TeX cell.`)
+                })
+              })
+            }
+          })
+        } catch (error) { errors.push(`${reportPoint}: ${failureMessage(error)}`) }
+      }
     })
   })
   if (errors.length) throw new Error(`Model health check failed:\n${errors.join('\n')}`)

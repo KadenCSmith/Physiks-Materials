@@ -1,3 +1,34 @@
 @import '../shared/materials.css';
 
-.materials-kv-symbol{padding:16px 18px;border:1px solid #333;border-radius:6px;margin:16px 0;color:#ddd}.materials-kv-symbol>span{font-size:12px;color:#aaa}.materials-kv-symbol .math-block{font-size:23px}.materials-kv-symbol p{font-size:12px;line-height:1.6;color:#aaa;margin:8px 0 0}
+.materials-kv-symbol,.defects-balance-work,.defects-energy-work{padding:18px;border:1px solid #333;border-radius:7px;margin:16px 0;color:#ddd}
+.materials-kv-symbol h3,.defects-balance-work h3,.defects-energy-work h3,.defects-reaction-equation h3{font-size:15px;font-weight:500;color:#eee;margin:0 0 12px}
+.materials-kv-symbol p,.defects-balance-work p,.defects-energy-work p{font-size:13px;line-height:1.65;color:#aaa;margin:10px 0 0}
+.materials-kv-symbol .math-block{font-size:22px;margin:12px 0}
+.defects-symbol-pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
+.defects-symbol-pair>div{min-width:0;border-top:1px solid #333;padding-top:12px}
+.defects-symbol-pair span{font-size:12px;color:#aaa}
+.defects-charge-input,.defects-reaction-select{display:flex;flex-wrap:wrap;align-items:center;gap:12px;color:#ccc;font-size:13px;margin:12px 0}
+.defects-charge-input :is(input,select){width:90px;background:#161616;color:#eee;border:1px solid #555;border-radius:4px;padding:8px;font:inherit}
+.defects-charge-input span{color:#999;font-size:12px}
+.defects-reaction-select select{max-width:100%;min-width:250px;background:#161616;color:#eee;border:1px solid #555;border-radius:4px;padding:9px;font:inherit}
+.defects-stage-caption{padding:16px 18px;border-left:3px solid #9db8e8;background:#0d0d0d;margin:16px 0;min-height:120px}
+.defects-stage-caption strong,.defects-energy-summary strong{color:#ddd;font-weight:500}
+.defects-stage-caption p,.defects-energy-summary p{font-size:13px;line-height:1.65;margin:7px 0 0}
+.materials-scene .defects-svg-small{font-size:12px;letter-spacing:0}
+.materials-scene .defects-atom-label{font-size:9px;fill:#111;letter-spacing:0;font-weight:600}
+.defects-reaction-equation{padding:16px 0}
+.defects-energy-work{overflow-x:auto}
+.defects-energy-table{min-width:500px}
+.defects-energy-table td{white-space:nowrap}
+.defects-stage-buttons button[aria-pressed="true"]{border-color:#9db8e8}
+@media(max-width:560px){.defects-symbol-pair{grid-template-columns:1fr}.defects-reaction-select select{min-width:0;width:100%}.defects-charge-input{align-items:flex-start}.defects-stage-caption{min-height:0}.materials-kv-symbol,.defects-balance-work,.defects-energy-work{padding:14px}.materials-kv-symbol .math-block{font-size:19px}}
+
+.defects-products-work{padding:18px;border:1px solid #333;border-radius:7px;margin:16px 0;color:#ddd}
+.defects-products-work h3{font-size:15px;font-weight:500;color:#eee;margin:0 0 12px}
+.defects-table-scroll{overflow-x:auto}
+.defects-product-table{min-width:480px}
+.defects-product-table .math-block{font-size:18px;margin:0;overflow:visible}
+.defects-product-table .katex-display{margin:.3em 0}
+.defects-product-table th,.defects-product-table td{padding:10px 8px}
+.defects-product-table td:not(:last-child){white-space:nowrap}
+.defects-products-work .materials-note{margin:12px 0 0;padding:0;font-size:13px;line-height:1.65}

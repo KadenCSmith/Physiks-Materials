@@ -3,7 +3,7 @@
 Four interactive ENGR330 labs built from [KadenCSmith/Physiks](https://github.com/KadenCSmith/Physiks), template version 0.3.2. The cinematic shell, Finder, Toolbox, playback, keyboard controls, and local settings are retained. App/storage identity: `physiks-materials-kadencsmith`.
 
 - **Crystals & indices:** SC/BCC/FCC atom sharing, coordination, signed directions, translated Miller planes, and BCC (200) density.
-- **Kröger–Vink defects:** independently selected species/site/charge, Frenkel and Schottky constructions, seven balanced reactions, and explicit activation/formation-energy assumptions.
+- **Kröger–Vink defects:** three focused activities: build a symbol with charge subtraction, follow one of seven balanced reactions, or compare energies with explicit activation/formation assumptions.
 - **Order & dislocations:** density-weighted RDF coordination, crystal/polymer/gas idealizations, and independently constructed screw/edge Burgers circuits.
 - **Cr–Pt phase equilibria:** a traceable solid phase slice, lever rule, qualitative cooling reactions, two consistent schematic common tangents, and phase-rule constraints.
 
@@ -38,9 +38,11 @@ Choose a lab from **Materials lab**. Scene buttons and Toolbox edit the same mod
 
 Open **customize** to edit grouped, named controls for the current view. Categories such as crystal structure, reaction and material use named choices; only relevant controls appear. Load an exam or lecture reference with the scene’s example buttons.
 
+In the defects lab, start with **Build a symbol**: choose the species and site, then compare your proposed superscript with the calculated charge. **Follow a reaction** has **Before**, **Change** and **Check products** buttons that pause at the corresponding stage. Colored circles track conserved atoms between equation terms; the site cards and tables explain empty sites, holes, reservoirs and charge contributions. These paths illustrate bookkeeping. **Compare energies** supplies a conventional logarithmic graph and a numerical table; temperature sets the values, and the interpretation explains what the given energies can establish. Each activity has its own Learn, Explore and Practice lesson.
+
 In the crystal lab, choose **Direction** to enter tail/head coordinates (decimals or fractions of the cell edge, such as `1/2`) or signed integer indices. **Calculate direction** updates the arrow, reduced indices, unit vector, drawn length and angles to the three axes. Choose **Plane** → **My plane** to enter axis intercepts, marking a parallel axis explicitly, or enter Miller indices and a plane level `q`. **Calculate plane** updates the slice, intercepts, normal, spacing, origin distance and cell-clipped area. Negative indices keep their overbars; `(200)` retains its spacing rather than being reduced to `(100)`.
 
-**Download current simulation PDF** saves the current diagram, inputs, readouts, calculation details, visible lesson, methods, assumptions and references. It freezes these values at the click without changing Play/Pause intent. The clean A4 PDF uses rendered page images to preserve mathematical notation and diagrams; its text is not searchable or selectable. Export requires a browser with canvas and file-download support. Source course PDFs and lecture captures are not bundled into the export.
+**Download current simulation PDF** freezes the current diagram and calculation at the click without changing Play/Pause intent. Defects exports follow the selected activity: a symbol with its charge arithmetic, one reaction with term contributions and conservation checks, or an energy comparison with its relevant assumptions. The other labs include current inputs, results, lesson, methods and references. The clean A4 PDF uses rendered page images to preserve mathematical notation and diagrams; its text is not searchable or selectable. Export requires a browser with canvas and file-download support. Source course PDFs and lecture captures are not bundled into the export.
 
 ## Evidence and limits
 

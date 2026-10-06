@@ -1,8 +1,8 @@
 import type { NumericParameters } from '../../framework/types'
 export const KB=8.617333262145e-5
 export const species=['Pt','O','Ta','V'];export const sites=['Pt','O','i']
-const absolute=[6,-2,5,0],reference=[6,-2,0]
-export function effectiveCharge(speciesId:number,siteId:number){return absolute[speciesId]-reference[siteId]}
+export const speciesValences=[6,-2,5,0],siteValences=[6,-2,0]
+export function effectiveCharge(speciesId:number,siteId:number){return speciesValences[speciesId]-siteValences[siteId]}
 export function kv(speciesId:number,siteId:number,charge:number){return `${species[speciesId]}${sites[siteId]==='i'?'ᵢ':sites[siteId]==='Pt'?'₍Pt₎':'₍O₎'}${charge===0?'ˣ':charge>0?'•'.repeat(charge):'′'.repeat(-charge)}`}
 /** True subscript/superscript notation; each dot or prime is one effective charge unit. */
 export function kvTex(speciesId:number,siteId:number,charge:number){const superscript=charge===0?'\\times':charge>0?'\\bullet'.repeat(charge):'\\prime'.repeat(-charge);return `\\mathrm{${species[speciesId]}}_{\\mathrm{${sites[siteId]}}}^{${superscript}}`}
@@ -26,5 +26,5 @@ export function balance(reaction:typeof reactions[number]){
  return {Pt:delta('atoms','Pt'),O:delta('atoms','O'),Ta:delta('atoms','Ta'),PtSites:delta('sites','Pt'),OSites:delta('sites','O'),iSites:delta('sites','i'),charge:reaction.right.reduce((s,t)=>s+t.charge*t.coefficient,0)-reaction.left.reduce((s,t)=>s+t.charge*t.coefficient,0)}
 }
 export function energyComparison(temperature:number,formation:boolean){const energies=[.1,2.3,4],counts=formation?[2,2,4]:[1,1,1];return energies.map((e,i)=>({energy:e,logK:-e/(KB*temperature*Math.LN10),logFraction:-e/(counts[i]*KB*temperature*Math.LN10),fraction:Math.exp(-e/(counts[i]*KB*temperature))}))}
-export function sampleModel(p:NumericParameters,time:number){const progress=Math.min(1,Math.max(0,Number.isFinite(time)?time/12:0)),r=reactions[Math.round(p.reaction)],b=balance(r),e=energyComparison(p.temperature,p.energyMode>=.5),expected=effectiveCharge(Math.round(p.species),Math.round(p.site));return {progress,temperature:p.temperature,hostValence:6,effectiveCharge:expected,chargeValid:Number(Number.isInteger(p.charge)&&p.charge===expected),massResidual:Math.abs(b.Pt)+Math.abs(b.O)+Math.abs(b.Ta),siteResidual:Math.abs(b.PtSites)+Math.abs(b.OSites)+Math.abs(b.iSites),chargeResidual:b.charge,anionLog:e[0].logFraction,cationLog:e[1].logFraction,schottkyLog:e[2].logFraction,anionEstimate:e[0].fraction}}
-export const getPlayback=()=>({duration:12,loop:false,note:'Conceptual defect displacement and incorporation. No migration rate is inferred from the given energies.'})
+export function sampleModel(p:NumericParameters,time:number){const progress=Math.min(1,Math.max(0,Number.isFinite(time)?time/12:0)),r=reactions[Math.round(p.reaction)],b=balance(r),e=energyComparison(p.temperature,p.energyMode>=.5),expected=effectiveCharge(Math.round(p.species),Math.round(p.site));return {progress,temperature:p.temperature,hostValence:6,speciesValence:speciesValences[Math.round(p.species)],normalSiteValence:siteValences[Math.round(p.site)],effectiveCharge:expected,chargeValid:Number(Number.isInteger(p.charge)&&p.charge===expected),massResidual:Math.abs(b.Pt)+Math.abs(b.O)+Math.abs(b.Ta),siteResidual:Math.abs(b.PtSites)+Math.abs(b.OSites)+Math.abs(b.iSites),chargeResidual:b.charge,anionLog:e[0].logFraction,cationLog:e[1].logFraction,schottkyLog:e[2].logFraction,anionEstimate:e[0].fraction}}
+export const getPlayback=()=>({duration:12,loop:false,note:'A staged explanation of notation, atom/site bookkeeping, or energy comparison. The timeline is a teaching reveal, not physical migration time.'})

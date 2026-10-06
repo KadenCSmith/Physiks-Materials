@@ -2,7 +2,7 @@ import { useState } from 'react'
 import katex from 'katex'
 import { useNumberFormat } from './formatting'
 import { createRasterPdf, type RasterPdfPage } from './rasterPdf'
-import type { DisplayOptions, NumericParameters, NumericSnapshot, SimulationDefinition } from './types'
+import type { DisplayOptions, NumericParameters, NumericSnapshot, SimulationDefinition, SnapshotReport, SnapshotReportCell } from './types'
 import './snapshot-export.css'
 
 export interface SnapshotExportProps {
@@ -31,6 +31,7 @@ const styles = `
 .snapshot-report p{font-size:11.5px;line-height:1.4;color:#344252;margin:3px 0 5px;overflow-wrap:anywhere}
 .snapshot-report .report-block{margin-bottom:8px;padding:0;break-inside:avoid}
 .snapshot-report .report-diagram{display:block;max-width:100%;width:100%;height:auto;max-height:365px;object-fit:contain;background:#050505;border:1px solid #cad2dc;margin:8px 0 4px}
+.snapshot-report-focused .report-diagram{max-height:260px}
 .snapshot-report .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px}
 .snapshot-report .report-value{display:flex;gap:12px;justify-content:space-between;border-bottom:1px solid #e1e6eb;padding:3px 0;font-size:11px;line-height:1.3;min-width:0}
 .snapshot-report .report-value span{min-width:0;overflow-wrap:anywhere;color:#465360}
@@ -57,7 +58,29 @@ const styles = `
 .snapshot-report .report-calculation .crystal-construction p{font-size:11.5px!important;color:#344252!important;line-height:1.4!important}
 .snapshot-report .report-calculation .materials-facts{width:100%;border-collapse:collapse;font-size:11px;color:#17202b}
 .snapshot-report .report-calculation .materials-facts :is(th,td){padding:4px 8px;text-align:left;border-bottom:1px solid #dce3ea;color:#17202b}
+.snapshot-report .report-table{width:100%;border-collapse:collapse;color:#17202b;font-size:11px;margin:8px 0;table-layout:auto}
+.snapshot-report .report-table :is(th,td){padding:6px 8px;border-bottom:1px solid #dce3ea;text-align:left;vertical-align:middle;line-height:1.35}
+.snapshot-report .report-table th{color:#34485e;font-weight:600}
+.snapshot-report .report-table .katex{font-size:1.12em;white-space:nowrap}
+.snapshot-report .report-section{border-top:1px solid #dce3ea;padding-top:9px}
+.snapshot-report-focused .report-table :is(th,td){padding-top:4px;padding-bottom:4px}
+.snapshot-report-focused .report-block{margin-bottom:6px}
+.snapshot-report-focused .report-section{padding-top:7px}
 `
+
+const renderedMath = (tex: string, inline = false) => katex.renderToString(tex, {
+  displayMode: !inline, output: 'htmlAndMathml', throwOnError: true, trust: false,
+})
+const reportCell = (cell: SnapshotReportCell) => typeof cell === 'string' ? escapeHtml(cell) : renderedMath(cell.tex, true)
+
+function structuredBlocks(report: SnapshotReport): string[] {
+  return report.sections.map(section => `<div class="report-section"><h2>${escapeHtml(section.title)}</h2>
+    ${(section.tex ?? []).map(tex => `<div class="report-math">${renderedMath(tex)}</div>`).join('')}
+    ${section.rows?.length ? `<div class="report-grid">${section.rows.map(row => `<div class="report-value"><span>${escapeHtml(row.label)}</span><strong>${escapeHtml(row.value)}</strong></div>`).join('')}</div>` : ''}
+    ${section.table ? `<table class="report-table"><thead><tr>${section.table.headers.map(header => `<th scope="col">${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${section.table.rows.map(row => `<tr>${row.map(cell => `<td>${reportCell(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : ''}
+    ${(section.notes ?? []).map(paragraph).join('')}
+  </div>`)
+}
 
 function cloneDiagram(svg: SVGSVGElement): string {
   const clone = svg.cloneNode(true) as SVGSVGElement
@@ -125,6 +148,7 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
     return clone.outerHTML
   })
   const snapshotNotes = model.getSnapshotNotes?.(parameters, snapshot, format) ?? []
+  const report = model.getSnapshotReport?.(parameters, snapshot, format)
   const readouts = model.getReadouts(parameters, snapshot)
   const filename = `physiks-${model.id}-snapshot.pdf`
   const inputRows = model.controls.filter(control => !control.visibleWhen || control.visibleWhen(parameters)).map(control => {
@@ -133,16 +157,22 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
   }).join('')
   const outputRows = readouts.map(readout => `<div class="report-value"><span>${escapeHtml(readout.label)}</span><strong>${escapeHtml(`${format(readout.value)}${readout.unit ? ` ${readout.unit}` : ''}`)}</strong></div>`).join('')
   const blocks: string[] = [
-    `<h1>${escapeHtml(model.title)}</h1>${paragraph(model.description)}${paragraph(`Current reveal: ${format(time)} / ${format(model.getPlayback(parameters).duration)} s. Labels ${display.labels ? 'on' : 'off'}; teaching overlays ${display.forces ? 'on' : 'off'}. Playback is conceptual.`)}`,
+    `<h1>${escapeHtml(report?.title ?? model.title)}</h1>${paragraph(report?.description ?? model.description)}${paragraph(`Current reveal: ${format(time)} / ${format(model.getPlayback(parameters).duration)} s. Labels ${display.labels ? 'on' : 'off'}; teaching overlays ${display.forces ? 'on' : 'off'}. Playback is conceptual.`)}`,
     ...diagrams.map(source => `<img class="report-diagram" src="${source}" alt="Current lab diagram"/>`),
+  ]
+  const sourceSet = new Set<string>()
+  if (report) {
+    blocks.push(...structuredBlocks(report))
+    report.sources.forEach(source => sourceSet.add(source))
+  } else {
+    blocks.push(
     `<h2>Current values</h2><div class="report-grid">${outputRows}</div>`,
     `<h2>Inputs</h2><div class="report-grid">${inputRows}</div>${paragraph('Input values retain calculation precision. Displayed results follow the app’s decimal setting.')}`,
     ...calculations.map(html => `<div class="report-calculation">${html}</div>`),
     ...(snapshotNotes.length ? ['<h2>Current calculation & interpretation</h2>', ...snapshotNotes.map(paragraph)] : []),
     ...(lesson.html ? [`<h2>Current lesson</h2><div class="report-lesson">${lesson.html}</div>`] : []),
     `<h2>Methods & calculation notes</h2>`,
-  ]
-  const sourceSet = new Set<string>()
+    )
   const descriptions = new Set<string>()
   model.formulas.filter(formula => !['Source access', 'Verified lecture example'].includes(formula.group) || parameters.reference === 1).forEach(formula => {
     const equations = formula.tex.map(tex => `<div class="report-math">${katex.renderToString(tex, { displayMode: true, output: 'htmlAndMathml', throwOnError: true, trust: false })}</div>`).join('')
@@ -157,7 +187,8 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
     ...(model.guides ?? []).map(guide => `${guide.title}: ${guide.text}`),
     ...model.controls.filter(control => !control.visibleWhen || control.visibleWhen(parameters)).map(control => control.note ?? ''),
   ])].filter(Boolean).map(paragraph))
-  blocks.push(`<h2>References</h2>${[...sourceSet].map(source => `<p class="report-source">${escapeHtml(source)}</p>`).join('')}`)
+  }
+  blocks.push('<h2>References</h2>', ...[...sourceSet].map(source => `<p class="report-source">${escapeHtml(source)}</p>`))
   const groupedBlocks: string[] = []
   let heading = ''
   for (const block of blocks) {
@@ -167,7 +198,7 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
   if (heading) groupedBlocks.push(heading)
 
   const root = document.createElement('div')
-  root.className = 'snapshot-report'
+  root.className = `snapshot-report${report ? ' snapshot-report-focused' : ''}`
   root.setAttribute('aria-hidden', 'true')
   const style = document.createElement('style'); style.textContent = styles; root.append(style)
   document.body.append(root)
@@ -200,9 +231,14 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
     pages.forEach(page => { page.style.display = 'none' })
     for (const [pageIndex, page] of pages.entries()) {
       page.style.display = 'block'
-      const canvas = await html2canvas(page, { backgroundColor: '#ffffff', scale: 2, logging: false,
+      const rendered = await html2canvas(page, { backgroundColor: '#ffffff', scale: 2, logging: false,
         scrollX: 0, scrollY: 0, windowWidth: 794, windowHeight: 1123 })
+      // The rendering library retains a transformed/clipped drawing context. A fresh
+      // canvas gives page furniture an identity transform and unrestricted clipping.
+      const canvas = document.createElement('canvas')
+      canvas.width = rendered.width; canvas.height = rendered.height
       const context = canvas.getContext('2d')!
+      context.drawImage(rendered, 0, 0)
       const scale = canvas.width / 794
       context.save()
       context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, 65 * scale)
