@@ -8,7 +8,7 @@ Tested on the user's Mac in **Google Chrome / Kaden profile**, October 6, 2026. 
 |---|---|
 | Runtime / lockfile | Node 26.8.2 satisfies ≥22.12.0; npm 11.19.1; `npm ci` succeeded; updated lockfile installed with npm ci; pinned html2canvas 1.4.1 added for local PDF export; other template versions retained |
 | `npm run check:models` during implementation | Passed: all four registered modules, valid defaults, numeric finite snapshots and supported parameter boundaries |
-| Final `npm run check` | Passed: type checking, lint, 3 scaffold tests, all **202 tests in22 files**, production build |
+| Final `npm run check` | Passed: type checking, lint, 3 scaffold tests, all **214 tests in24 files**, production build |
 | Mathematical tests | **22 domain tests**: signed indices, atom counts, BCC area density, effective charges and seven full balances, mass-action exponents, RDF radial weighting/coordination, seeded particles, signed circuit closure, phase fractions and endpoints, both components at both tangents, convex envelope |
 | Direction timing | 6-second direction window and matching sample progress; 12-second windows for other views; nonperiodic endpoints retained |
 | Change hygiene | `git diff --check` passed; raw course material under ignored `.local/` |
@@ -50,7 +50,7 @@ The notation and calculations were audited against the same 12-page exam and ins
 
 Chrome tests exercised a [−12 1 0] custom direction, invalid zero direction/normal, fractional intercepts (0.75,1,1) producing (4 3 3) at integer level3, and (200) at q=0/1/3. The q=0 case distinguishes contained axes; q=3 produces a valid equation but zero area in the cell. Enter submits a custom plane. Plane reveal at0 shows no boundary/fill; 7.2s has partial edges; 12s has all edges and fill. Named selectors show only relevant controls. At390×844 the customization dialog and document stay within390px.
 
-Actual Chrome PDF downloads were generated for all four labs and rendered with Poppler; embedded JPEGs were also inspected at original resolution to avoid misleading resized previews. Mathematical notation and formulas passed visual/scientific review. Final repeated headers/footers and plane-coordinate tables passed review on all pages. The reviewed crystal plane sample uses4 pages, the order/dislocations sample2 and the phase sample3. Generic reports include frozen diagrams, exact input notes, current results, lesson, methods, assumptions and references. Reports are A4 image-based PDFs; text is not selectable or searchable.
+Actual Chrome PDF downloads were generated for all four labs and rendered with Poppler; embedded JPEGs were also inspected at original resolution to avoid misleading resized previews. Mathematical notation and formulas passed visual/scientific review. Repeated headers/footers and plane-coordinate tables were reviewed on all pages. The corrected crystal plane sample uses3 pages, order/dislocations3 and phases3. Generic reports include frozen diagrams, exact input notes, current results, lesson, methods, assumptions and references. Reports are A4 image-based PDFs; text is not selectable or searchable. The earlier layout review missed image distortion; the explicit proportion measurements below supersede that part of the review.
 
 ## Focused defects and PDF redesign
 
@@ -59,3 +59,23 @@ The three activities use different controls, readouts, lessons and snapshot repo
 The logarithmic energy plot and numerical tables were checked at1000 K and at300/2000 K. Nonzero tiny weights use raised scientific exponents. Activation mode reports log₁₀w; conditional formation mode distinguishes log₁₀K and log₁₀c and warns when the anion fraction invalidates dilution. Each activity's Learn/Explore/Practice content matches the selected task. Customize shows only the active fields. All three activities were checked at390×844 with document width390 and no KaTeX error nodes. Temporary viewport overrides were reset.
 
 Final actual downloads passed scientific and page-layout review: Ta-on-Pt symbol1 page, activation comparison1, conditional formation1, cation-Frenkel reaction2. Each includes the selected activity's diagram, calculations, notation explanation or conservation checks, relevant formulas, assumptions and references, with no inactive activity dump. See the recreated-app screenshots: [symbol narrow](screenshots/defects-symbol-narrow.jpg), [reaction narrow](screenshots/defects-reaction-narrow.jpg), [energy narrow](screenshots/defects-energy-narrow.jpg). The final check log is `.local/logs/defects-final-check.log`.
+
+## PDF proportions and physical dislocation drawing correction
+
+The export previously forced diagrams to full width while capping their height. The canvas renderer does not honor `object-fit`, so this stretched the figures. Both dimensions are now scaled together from each SVG viewBox, with explicit matching SVG/image dimensions and no independent height clamp. Four regression tests cover the lab ratios, wide/tall cases, generated dimensions and invalid sizes. Calculation sections paginate by whole tables, result lists and equations; headings stay with their following content. Plane notes already included beside the calculation are no longer repeated in the assumptions section.
+
+Fresh Chrome downloads for all four labs were rendered with Poppler. All10 final pages were visually inspected, along with original-resolution embedded page images. Measured dark diagram rectangles in the actual PDF images agree with their source ratios within **0.1%**, accounting for whole-pixel rounding:
+
+| Figure | Source dimensions | PDF pixel dimensions | Relative ratio error |
+|---|---|---|---|
+| Crystal plane | 600×480 | 908×726 | 0.055% |
+| Defects energy chart | 760×365 | 1074×516 | 0.038% |
+| Phase Gibbs chart | 760×440 | 1254×726 | 0% |
+| Dislocation crystal | 430×380 | 822×726 | 0.058% |
+| Separate Burgers circuit | 760×440 | 1254×726 | 0% |
+
+The physical screw illustration was compared directly with the only exam's p8 Fig3. It now has opaque connected lattice walls/floor, a tapered surface step ending at the core, and separate line/Burgers arrows. Edge uses an atom-row cross-section with a terminating extra half-plane. A second SVG supplies the independent circuit rather than overlaying it on an unrelated physical sketch. Screw projection is along +x; a height chart reveals the hidden rise of a. Edge projection is along +z and exposes a horizontal gap a. The physical drawings are schematic identification sketches, not measured or relaxed atomistic displacement fields. No directed exam circuit, axes or step counts are claimed.
+
+Eight added geometry tests cover the 16 actual neighbor bonds, screw angular displacement, endpoint gaps at three spacings, enclosed edge core, and t×b toward the extra half-plane. Browser controls paused the circuit at0/6/12 seconds with0/8/16 steps visible; screw Parallel and edge Perpendicular Practice answers were accepted, and changing character reset stale lesson feedback. Long native SVG title tooltips were removed. At390×844 the document width remained390px, no KaTeX errors appeared, and SVG proportions were retained; the override was reset. [Screw narrow screenshot](screenshots/order-screw-narrow.jpg).
+
+Final correction checks: `.local/logs/pdf-proportions-final-check.log`; type checking, lint, scaffold verification,214 tests and production build passed. Corrected samples are retained locally in ignored `output/pdf/`; course source images remain ignored and read-only.

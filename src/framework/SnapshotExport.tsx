@@ -2,6 +2,7 @@ import { useState } from 'react'
 import katex from 'katex'
 import { useNumberFormat } from './formatting'
 import { createRasterPdf, type RasterPdfPage } from './rasterPdf'
+import { snapshotDiagramImage, type SnapshotDiagram } from './snapshotDiagram'
 import type { DisplayOptions, NumericParameters, NumericSnapshot, SimulationDefinition, SnapshotReport, SnapshotReportCell } from './types'
 import './snapshot-export.css'
 
@@ -30,8 +31,7 @@ const styles = `
 .snapshot-report h3{font-size:13px;line-height:1.3;margin:0 0 5px;color:#17202b;font-weight:600}
 .snapshot-report p{font-size:11.5px;line-height:1.4;color:#344252;margin:3px 0 5px;overflow-wrap:anywhere}
 .snapshot-report .report-block{margin-bottom:8px;padding:0;break-inside:avoid}
-.snapshot-report .report-diagram{display:block;max-width:100%;width:100%;height:auto;max-height:365px;object-fit:contain;background:#050505;border:1px solid #cad2dc;margin:8px 0 4px}
-.snapshot-report-focused .report-diagram{max-height:260px}
+.snapshot-report .report-diagram{display:block;box-sizing:content-box;background:#050505;border:1px solid #cad2dc;margin:8px auto 4px}
 .snapshot-report .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px}
 .snapshot-report .report-value{display:flex;gap:12px;justify-content:space-between;border-bottom:1px solid #e1e6eb;padding:3px 0;font-size:11px;line-height:1.3;min-width:0}
 .snapshot-report .report-value span{min-width:0;overflow-wrap:anywhere;color:#465360}
@@ -82,7 +82,7 @@ function structuredBlocks(report: SnapshotReport): string[] {
   </div>`)
 }
 
-function cloneDiagram(svg: SVGSVGElement): string {
+function cloneDiagram(svg: SVGSVGElement): SnapshotDiagram {
   const clone = svg.cloneNode(true) as SVGSVGElement
   const originals = [svg, ...svg.querySelectorAll('*')]
   const copies = [clone, ...clone.querySelectorAll('*')]
@@ -94,14 +94,16 @@ function cloneDiagram(svg: SVGSVGElement): string {
     copies[index].setAttribute('style', properties.map(property => `${property}:${computed.getPropertyValue(property)}`).join(';'))
   })
   const box = svg.viewBox.baseVal
+  const width = box.width || svg.clientWidth, height = box.height || svg.clientHeight
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-  clone.setAttribute('width', String(box.width || svg.clientWidth))
-  clone.setAttribute('height', String(box.height || svg.clientHeight))
+  clone.setAttribute('width', String(width))
+  clone.setAttribute('height', String(height))
+  clone.setAttribute('preserveAspectRatio', 'xMidYMid meet')
   const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
   background.setAttribute('x', String(box.x)); background.setAttribute('y', String(box.y))
   background.setAttribute('width', '100%'); background.setAttribute('height', '100%'); background.setAttribute('fill', '#050505')
   clone.insertBefore(background, clone.firstChild)
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}`
+  return { source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}`, width, height }
 }
 
 function currentLesson(): { html: string; notes: string[] } {
@@ -115,8 +117,30 @@ function currentLesson(): { html: string; notes: string[] } {
   content?.querySelectorAll('button,nav').forEach(element => element.remove())
   const notes = [...(lesson?.querySelectorAll('.materials-detail p') ?? []),
     ...document.querySelectorAll('.visual-workspace p.materials-note, .visual-workspace div.materials-note p')]
+    .filter(element => !element.closest('.crystal-construction'))
     .map(element => element.textContent?.trim() ?? '').filter(Boolean)
   return { html: content?.outerHTML ?? '', notes: [...new Set(notes)] }
+}
+
+/** Keep calculations readable while allowing whole tables and equations to paginate. */
+function calculationBlocks(clone: HTMLElement): string[] {
+  if (!clone.matches('.crystal-results, .crystal-construction')) return [clone.outerHTML]
+  const groups: Element[][] = []
+  let headings: Element[] = []
+  for (const child of clone.children) {
+    if (child.matches('h1,h2,h3,h4,h5,h6,.eyebrow')) headings.push(child)
+    else { groups.push([...headings, child]); headings = [] }
+  }
+  if (headings.length) {
+    if (groups.length) groups.at(-1)!.push(...headings)
+    else groups.push(headings)
+  }
+  if (!groups.length) return [clone.outerHTML]
+  return groups.map(children => {
+    const wrapper = clone.cloneNode(false) as HTMLElement
+    children.forEach(child => wrapper.append(child.cloneNode(true)))
+    return wrapper.outerHTML
+  })
 }
 
 function fitMath(root: HTMLElement) {
@@ -142,10 +166,10 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
   const diagrams = [...(visualRoot?.querySelectorAll<SVGSVGElement>('.materials-scene, .response-chart svg') ?? [])].map(cloneDiagram)
   if (!diagrams.length) throw new Error('The current diagram is unavailable. Open a lab and try again.')
   const lesson = currentLesson()
-  const calculations = [...(visualRoot?.querySelectorAll<HTMLElement>('.crystal-results, .materials-kv-symbol, .crystal-construction') ?? [])].map(element => {
+  const calculations = [...(visualRoot?.querySelectorAll<HTMLElement>('.crystal-results, .materials-kv-symbol, .crystal-construction') ?? [])].flatMap(element => {
     const clone = element.cloneNode(true) as HTMLElement
     clone.querySelectorAll('button,input,nav').forEach(control => control.remove())
-    return clone.outerHTML
+    return calculationBlocks(clone)
   })
   const snapshotNotes = model.getSnapshotNotes?.(parameters, snapshot, format) ?? []
   const report = model.getSnapshotReport?.(parameters, snapshot, format)
@@ -158,7 +182,7 @@ export async function downloadSnapshotPdf(props: SnapshotExportProps, format: (v
   const outputRows = readouts.map(readout => `<div class="report-value"><span>${escapeHtml(readout.label)}</span><strong>${escapeHtml(`${format(readout.value)}${readout.unit ? ` ${readout.unit}` : ''}`)}</strong></div>`).join('')
   const blocks: string[] = [
     `<h1>${escapeHtml(report?.title ?? model.title)}</h1>${paragraph(report?.description ?? model.description)}${paragraph(`Current reveal: ${format(time)} / ${format(model.getPlayback(parameters).duration)} s. Labels ${display.labels ? 'on' : 'off'}; teaching overlays ${display.forces ? 'on' : 'off'}. Playback is conceptual.`)}`,
-    ...diagrams.map(source => `<img class="report-diagram" src="${source}" alt="Current lab diagram"/>`),
+    ...diagrams.map(diagram => snapshotDiagramImage(diagram, Boolean(report))),
   ]
   const sourceSet = new Set<string>()
   if (report) {

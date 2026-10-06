@@ -1,1 +1,5 @@
 @import '../shared/materials.css';
+.order-dislocation .order-burgers-label{fill:#e2bc82}
+.order-dislocation .order-tangent-label{fill:#91cbb5}
+.order-circuit-explanation{padding-top:12px}
+.order-circuit{margin-top:14px}

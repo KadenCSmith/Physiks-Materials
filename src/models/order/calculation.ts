@@ -20,5 +20,30 @@ export const polymerParticles:Particle[]=Array.from({length:12},(_,i)=>{const k=
 export function sampleModel(p:NumericParameters,time:number){const progress=Math.min(1,Math.max(0,Number.isFinite(time)?time/12:0)),r=p.shellRadius*progress,mode=Math.round(p.material);return {progress,shell:r,coordination:coordination(mode,r,p.density),g:rdf(mode,r,p.density),a:bccA,burgers:p.spacing,lineDot:Math.round(p.dislocation)===0?p.spacing:0,firstDistance}}
 /** Instructor's SF/RH convention: the circuit is right-handed about the positive line; b goes start → finish. */
 export function burgersVector(path:Particle[]):Particle{return path.at(-1)!.map((v,i)=>v-path[0][i]) as Particle}
-export function circuit(dislocation:number,a:number):Particle[]{return dislocation===0?[[0,0,0],[0,4*a,0],[a/4,4*a,4*a],[a/2,0,4*a],[a,0,0]]:[[0,0,0],[4*a,0,0],[4*a,4*a,0],[0,4*a,0],[a,0,0]]}
+/** One turn of the ideal screw displacement u_x = b theta/(2 pi), measured from S. */
+export function screwRise(y:number,z:number):number {
+ const start=-3*Math.PI/4
+ let angle=Math.atan2(z-2,y-2)-start
+ if(angle<0)angle+=2*Math.PI
+ return angle/(2*Math.PI)
+}
+/** Four nearest-neighbor steps per leg. Coordinates are measured from S, in units of a. */
+export function circuitSteps(dislocation:number,a:number):Particle[]{
+ if(dislocation===0){
+  const yz:Array<[number,number]>=[[0,0]]
+  for(let i=1;i<=4;i++)yz.push([i,0])
+  for(let i=1;i<=4;i++)yz.push([4,i])
+  for(let i=1;i<=4;i++)yz.push([4-i,4])
+  for(let i=1;i<=4;i++)yz.push([0,4-i])
+  return yz.map(([y,z],i)=>[a*(i===16?1:screwRise(y,z)),a*y,a*z])
+ }
+ // Above the terminating extra half-plane the left/right columns are shifted
+ // by -a/2 / +a/2. Four actual neighbor bonds are followed on every leg.
+ const raw:Array<[number,number]>=[[-2.5,-2],[-1.5,-2],[-.5,-2],[.5,-2],[1.5,-2],
+  [1.5,-1],[1.5,0],[2,1],[2,2],[1,2],[0,2],[-1,2],[-2,2],
+  [-2,1],[-1.5,0],[-1.5,-1],[-1.5,-2]]
+ return raw.map(([x,y])=>[a*(x+2.5),a*(y+2),0])
+}
+/** Corner coordinates retain the same start-to-finish SF/RH convention. */
+export function circuit(dislocation:number,a:number):Particle[]{const steps=circuitSteps(dislocation,a);return [0,4,8,12,16].map(i=>steps[i])}
 export const getPlayback=()=>({duration:12,loop:false,note:'The shell expands and the Burgers circuit is traced once. Progress is conceptual, not elapsed diffusion time.'})

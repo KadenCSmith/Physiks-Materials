@@ -42,7 +42,11 @@ In the defects lab, start with **Build a symbol**: choose the species and site, 
 
 In the crystal lab, choose **Direction** to enter tail/head coordinates (decimals or fractions of the cell edge, such as `1/2`) or signed integer indices. **Calculate direction** updates the arrow, reduced indices, unit vector, drawn length and angles to the three axes. Choose **Plane** → **My plane** to enter axis intercepts, marking a parallel axis explicitly, or enter Miller indices and a plane level `q`. **Calculate plane** updates the slice, intercepts, normal, spacing, origin distance and cell-clipped area. Negative indices keep their overbars; `(200)` retains its spacing rather than being reduced to `(100)`.
 
+In **Order & dislocations → Burgers circuit**, the crystal picture identifies the defect and a separate circuit explains the calculation. The screw picture shows a surface step ending at its core; its circuit is viewed along the line, with a height chart exposing the one-spacing rise hidden by that projection. The edge picture shows an extra half-plane ending at the core and a sideways Burgers gap. **Restart circuit**, **Inspect halfway** and **Show Burgers gap** pause at 0, 6 and 12 seconds. Four neighbor bonds on each side make 16 steps. The crystal is a schematic identification sketch; the independently constructed circuit supplies its own counts and axes, which are not supplied by the exam figure.
+
 **Download current simulation PDF** freezes the current diagram and calculation at the click without changing Play/Pause intent. Defects exports follow the selected activity: a symbol with its charge arithmetic, one reaction with term contributions and conservation checks, or an energy comparison with its relevant assumptions. The other labs include current inputs, results, lesson, methods and references. The clean A4 PDF uses rendered page images to preserve mathematical notation and diagrams; its text is not searchable or selectable. Export requires a browser with canvas and file-download support. Source course PDFs and lecture captures are not bundled into the export.
+
+PDF figures retain their original width-to-height ratio: both dimensions are fitted together inside the page limits. Figures are centered without stretching, and complete tables and equation units stay together when paginating calculation notes.
 
 ## Evidence and limits
 
