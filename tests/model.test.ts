@@ -63,6 +63,26 @@ describe('simulation registration', () => {
     expect(() => defineSimulation({ ...model, defaults: {}, controls: [] })).not.toThrow()
   })
 
+  it('requires usable named choices with distinct values and labels, matching bounds and defaults', () => {
+    const model = fixture()
+    const optionControl = { key: 'position', label: 'Structure', min: 0, max: 2, step: 1,
+      options: [{ value: 0, label: 'SC' }, { value: 1, label: 'BCC' }, { value: 2, label: 'FCC' }],
+      group: 'Cell', visibleWhen: () => true }
+    const named = { ...model, defaults: { position: 1, rate: 2 }, controls: [optionControl, model.controls[1]] }
+    expect(() => defineSimulation(named)).not.toThrow()
+    for (const options of [
+      [], [{ value: 0, label: 'SC' }],
+      [...optionControl.options, { value: 1, label: 'Extra' }],
+      [...optionControl.options, { value: 1.5, label: ' BCC ' }],
+      [...optionControl.options, { value: Infinity, label: 'Infinite' }],
+      [...optionControl.options, { value: 1.5, label: '' }],
+    ]) {
+      expect(() => defineSimulation({ ...named, controls: [{ ...optionControl, options }, model.controls[1]] })).toThrow(/option/)
+    }
+    expect(() => defineSimulation({ ...named, defaults: { position: 0.5, rate: 2 } })).toThrow(/default must match a named option/)
+    expect(() => defineSimulation({ ...named, controls: [{ ...optionControl, group: ' ' }, model.controls[1]] })).toThrow(/group must/)
+  })
+
   it('rejects ambiguous control labels and unstable duplicate formula or plot identities', () => {
     const model = fixture()
     expect(() => defineSimulation({ ...model, controls: [model.controls[0], { ...model.controls[1], label: ' position ' }] })).toThrow(/duplicate control label/)
@@ -146,6 +166,16 @@ describe('actionable model health checks', () => {
     model.getReadouts = () => []
     expect(validateModelSamples(model)).toEqual({ modelId: 'static-model', parameterCases: 1, samplePoints: 3 })
   })
+
+  it('checks export note callbacks at sampled states and reports malformed or thrown notes', () => {
+    const model = fixture('snapshot-notes')
+    model.getSnapshotNotes = (parameters, snapshot, format = String) => [`Rate ${format(parameters.rate)}; current value ${format(snapshot.value)}.`]
+    expect(() => validateModelSamples(model)).not.toThrow()
+    model.getSnapshotNotes = () => ['']
+    expect(() => validateModelSamples(model)).toThrow(/snapshot-notes \[defaults\] t=0 getSnapshotNotes: expected an array of nonempty notes/)
+    model.getSnapshotNotes = () => { throw new Error('Missing geometry') }
+    expect(() => validateModelSamples(model)).toThrow(/getSnapshotNotes: Missing geometry/)
+  })
 })
 
 describe('configuration connects to the registry', () => {
@@ -165,6 +195,15 @@ describe('configuration connects to the registry', () => {
 })
 
 describe('parameter and persisted-session recovery', () => {
+  it('recovers stale named selections without rounding continuous controls', () => {
+    const model = fixture()
+    model.defaults.position = 0
+    model.controls[0].options = [{ value: -1, label: 'Left' }, { value: 0, label: 'Center' }, { value: 1, label: 'Right' }]
+    expect(sanitizeParameters(model, { position: -1, rate: 0.731234 })).toEqual({ position: -1, rate: 0.731234 })
+    for (const position of [0.5, 100, -100, NaN, '1']) {
+      expect(sanitizeParameters(model, { position, rate: 0.731234 })).toEqual({ position: 0, rate: 0.731234 })
+    }
+  })
   it('clamps finite input without rounding and discards undeclared values', () => {
     const model = fixture()
     expect(sanitizeParameters(model, { position: 0.731234, rate: 200, added: 3 })).toEqual({ position: 0.731234, rate: 10 })

@@ -7,7 +7,7 @@ export type ParameterControlProps = {
   onChange: (value: number) => void
 }
 
-/** A synchronized slider and editable number with bounded, finite commits. */
+/** Named choices or a synchronized slider and full-precision bounded number. */
 export function ParameterControl({ definition: d, value, onChange }: ParameterControlProps) {
   const id = useId()
   const inputId = `parameter-${id}`
@@ -36,7 +36,15 @@ export function ParameterControl({ definition: d, value, onChange }: ParameterCo
       <label htmlFor={inputId}>{d.label}</label>
       {d.symbol && <span aria-hidden="true">{d.symbol}</span>}
     </div>
-    <div className="parameter-inputs">
+    {d.options ? <select id={inputId} className="parameter-select" aria-label={d.label}
+      aria-describedby={d.note ? noteId : undefined}
+      value={d.options.some(option => option.value === current) ? current : d.options[0].value}
+      onChange={event => {
+        const next = Number(event.target.value)
+        if (d.options?.some(option => option.value === next) && next !== current) onChange(next)
+      }}>
+      {d.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select> : <div className="parameter-inputs">
       <input type="range" aria-label={`${d.label} slider`} aria-describedby={d.note ? noteId : undefined}
         min={min} max={max} step={d.step} value={current}
         onChange={event => {
@@ -63,7 +71,7 @@ export function ParameterControl({ definition: d, value, onChange }: ParameterCo
           }
         }} />
       {d.unit && <span className="control-unit">{d.unit}</span>}
-    </div>
+    </div>}
     {d.note && <small id={noteId} className="control-note">{d.note}</small>}
   </div>
 }

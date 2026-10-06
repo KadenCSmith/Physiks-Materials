@@ -1,12 +1,14 @@
 import type {NumericParameters} from '../../framework/types'
 import {solidReadings,events} from './boundaries'
 export const phaseNames=['(Cr)','Cr₄Pt','(Pt)','L']
-export function endpoints(T:number){if(T<1400||T>1530)throw new Error('Outside digitized solid slice.');let i=T<=1500?0:1;const a=solidReadings[i],b=solidReadings[i+1],f=(T-a[0])/(b[0]-a[0]);return [1,2,3,4].map(k=>a[k]+f*(b[k]-a[k]))}
-export function lever(c:number,a:number,b:number){if(!(b>a)||c<a||c>b)throw new Error('Composition must be inside a nonzero tie line.');const right=(c-a)/(b-a);return {left:1-right,right}}
-export function equilibrium(T:number,c:number){if(c<0||c>35)throw new Error('Outside supported composition.');const [cr,cl,ch,pt]=endpoints(T)
+export function endpoints(T:number){if(!Number.isFinite(T)||T<1400||T>1530)throw new Error('Outside digitized solid slice.');let i=T<=1500?0:1;const a=solidReadings[i],b=solidReadings[i+1],f=(T-a[0])/(b[0]-a[0]);return [1,2,3,4].map(k=>a[k]+f*(b[k]-a[k]))}
+export function lever(c:number,a:number,b:number){if(![c,a,b].every(Number.isFinite)||!(b>a)||c<a||c>b)throw new Error('Composition must be inside a nonzero tie line.');const right=(c-a)/(b-a);return {left:1-right,right}}
+export function equilibrium(T:number,c:number){if(!Number.isFinite(c)||c<0||c>35)throw new Error('Outside supported composition.');const [cr,cl,ch,pt]=endpoints(T)
  const single=(phase:number)=>({phaseA:phase,phaseB:phase,phases:1,left:c,right:c,fA:1,fB:0,fractionValid:1})
  const pair=(a:number,b:number,left:number,right:number)=>{const f=lever(c,left,right);return {phaseA:a,phaseB:b,phases:2,left,right,fA:f.left,fB:f.right,fractionValid:1}}
- if(T===1530&&c>=21.8&&c<=31.3)return {phaseA:1,phaseB:2,phases:3,left:21.8,right:31.3,fA:0,fB:0,fractionValid:0}
+ // At the terminal compositions, conservation forces the other two amounts to zero.
+ // In the open interval, liquid + both solids can coexist and amounts need an extra constraint.
+ if(T===1530&&c>ch&&c<pt)return {phaseA:1,phaseB:2,phases:3,left:ch,right:pt,fA:0,fB:0,fractionValid:0}
  if(c<=cr)return single(0);if(c<cl)return pair(0,1,cr,cl);if(c<=ch)return single(1);if(c<pt)return pair(1,2,ch,pt);return single(2)
 }
 const [a,b,c,d]=endpoints(1400).map(x=>x/100)

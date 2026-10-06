@@ -19,6 +19,13 @@
 .model-playback-note{font-size:11px;line-height:1.7;color:#888;margin:14px 0 20px}
 .parameter-inputs input[type=number]{font-variant-numeric:tabular-nums}
 .parameter-control .control-unit{overflow-wrap:anywhere}
+.parameter-select{display:block;width:100%;min-height:44px;margin:9px 0 7px;line-height:1.5}
+.cinematic-drawer .parameter-select{padding:10px 12px;font-size:13px}
+.parameter-top label{line-height:1.5}
+.parameter-inputs input[type=number]{min-height:42px;width:88px}
+.parameter-inputs input[type=range]{min-height:32px}
+.cinematic-drawer .control-note{font-size:11px;line-height:1.6}
+@media(max-width:760px){.toolbox-navigation>span{font-size:9px;margin-top:5px}.cinematic-drawer .parameter-select{font-size:16px}.cinematic-drawer input[type=number]{font-size:16px}.drawer-heading button{width:44px;height:44px}}
 .version-menu{max-height:calc(100dvh - 160px);overflow-y:auto;overscroll-behavior:contain}
 .is-compact .version-menu{max-height:calc(100dvh - 110px)}
 .version-menu [role=menuitemradio]:focus-visible{outline:1px solid #bbb;outline-offset:3px}

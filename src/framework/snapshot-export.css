@@ -1,0 +1,4 @@
+.snapshot-export{margin:16px 0}
+.snapshot-export>button{padding:10px 14px;min-height:44px;font-size:12px}
+.snapshot-export>p{font-size:11px;line-height:1.5;color:#999;margin:7px 0 0;max-width:600px}
+.snapshot-export>button:disabled{opacity:.6;cursor:progress}

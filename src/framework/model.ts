@@ -63,6 +63,37 @@ export function validateRegistry(models: readonly SimulationDefinition[]): void 
       } else if (defaultValue < control.min || defaultValue > control.max) {
         errors.push(`${label}.${key}: default must lie between min and max.`)
       }
+      if (control.options !== undefined) {
+        if (!Array.isArray(control.options) || control.options.length === 0) {
+          errors.push(`${label}.${key}: options must contain at least one named numeric choice.`)
+        } else {
+          const values = new Set<number>()
+          const optionLabels = new Set<string>()
+          control.options.forEach(option => {
+            if (!Number.isFinite(option.value) || option.value < control.min || option.value > control.max) {
+              errors.push(`${label}.${key}: option values must be finite and within the control bounds.`)
+            }
+            if (values.has(option.value)) errors.push(`${label}.${key}: duplicate option value.`)
+            values.add(option.value)
+            const optionLabel = typeof option.label === 'string' ? option.label.trim().toLowerCase() : ''
+            if (!optionLabel) errors.push(`${label}.${key}: every option needs a nonempty label.`)
+            else if (optionLabels.has(optionLabel)) errors.push(`${label}.${key}: duplicate option label.`)
+            optionLabels.add(optionLabel)
+          })
+          if (!values.has(control.min) || !values.has(control.max)) {
+            errors.push(`${label}.${key}: options must include the control bounds.`)
+          }
+          if (typeof defaultValue === 'number' && !values.has(defaultValue)) {
+            errors.push(`${label}.${key}: default must match a named option.`)
+          }
+        }
+      }
+      if (control.group !== undefined && (typeof control.group !== 'string' || !control.group.trim())) {
+        errors.push(`${label}.${key}: group must be a nonempty label when provided.`)
+      }
+      if (control.visibleWhen !== undefined && typeof control.visibleWhen !== 'function') {
+        errors.push(`${label}.${key}: visibleWhen must be a function when provided.`)
+      }
     })
     Object.keys(model.defaults).forEach((key) => {
       if (!keys.has(key)) errors.push(`${label}.${key}: every default must have a matching control.`)
@@ -93,12 +124,15 @@ export function defineSimulation<T extends SimulationDefinition>(model: T): T {
   return model
 }
 
-/** Only declared keys survive. Finite values clamp to bounds without rounding to slider steps. */
+/** Continuous values clamp without rounding. Stale named choices recover their declared default. */
 export function sanitizeParameters(model: SimulationDefinition, input: unknown): NumericParameters {
   validateRegistry([model])
   return Object.fromEntries(model.controls.map((control) => {
     const saved = ownValue(input, control.key)
     const value = typeof saved === 'number' && Number.isFinite(saved) ? saved : model.defaults[control.key]
+    if (control.options) {
+      return [control.key, control.options.some(option => option.value === value) ? value : model.defaults[control.key]]
+    }
     return [control.key, Math.min(control.max, Math.max(control.min, value))]
   }))
 }
@@ -236,6 +270,14 @@ export function validateModelSamples(model: SimulationDefinition, options: Model
           errors.push(`${point} readout "${readout.label}".value: expected a finite number.`)
         }
       })
+      if (model.getSnapshotNotes) {
+        try {
+          const notes: unknown = model.getSnapshotNotes({ ...parameters }, { ...numeric })
+          if (!Array.isArray(notes) || notes.some(note => typeof note !== 'string' || !note.trim())) {
+            errors.push(`${point} getSnapshotNotes: expected an array of nonempty notes.`)
+          }
+        } catch (error) { errors.push(`${point} getSnapshotNotes: ${failureMessage(error)}`) }
+      }
     })
   })
   if (errors.length) throw new Error(`Model health check failed:\n${errors.join('\n')}`)

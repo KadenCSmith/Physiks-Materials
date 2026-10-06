@@ -4,6 +4,11 @@ export type NumericParameters = Record<string, number>
 export type NumericSnapshot = Record<string, number>
 export type ValueTone = 'position' | 'velocity' | 'force' | 'neutral'
 
+export interface ParameterOption {
+  value: number
+  label: string
+}
+
 export interface ParameterDefinition {
   key: string
   label: string
@@ -13,6 +18,12 @@ export interface ParameterDefinition {
   max: number
   step: number
   note?: string
+  /** Named choices retain the numeric model and storage contract. */
+  options?: ParameterOption[]
+  /** Related controls share a labeled fieldset in the customization drawer. */
+  group?: string
+  /** Hidden controls still participate in validation and saved-value recovery. */
+  visibleWhen?: (parameters: NumericParameters) => boolean
 }
 export interface FormulaEntry {
   id: string
@@ -40,11 +51,18 @@ export interface SimulationSceneProps {
   onParameterChange: (key: string, value: number) => void
   onInteractionStart: () => void
   onInteractionEnd: () => void
+  onOpenControls?: () => void
 }
 export interface SimulationLessonProps {
   parameters: NumericParameters
   snapshot: NumericSnapshot
   time: number
+}
+export interface SimulationControlsProps {
+  parameters: NumericParameters
+  snapshot: NumericSnapshot
+  onParameterChange: (key: string, value: number) => void
+  onParametersChange: (values: NumericParameters) => void
 }
 
 /** Register a model without changing the shell. All numeric quantities use the units declared by the model. */
@@ -59,9 +77,12 @@ export interface SimulationDefinition {
   sample: (parameters: NumericParameters, time: number) => NumericSnapshot
   getPlayback: (parameters: NumericParameters) => PlaybackDefinition
   getReadouts: (parameters: NumericParameters, snapshot: NumericSnapshot) => Readout[]
+  /** Snapshot facts and caveats for exports, independent of the active lesson step. */
+  getSnapshotNotes?: (parameters: NumericParameters, snapshot: NumericSnapshot, format?: (value: number) => string) => string[]
   Scene: ComponentType<SimulationSceneProps>
   Lesson: ComponentType<SimulationLessonProps>
   Details?: ComponentType<SimulationLessonProps>
+  Controls?: ComponentType<SimulationControlsProps>
   formulas: FormulaEntry[]
   plots?: PlotDefinition[]
   guides?: GuideEntry[]

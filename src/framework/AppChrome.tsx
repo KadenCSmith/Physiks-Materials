@@ -158,8 +158,8 @@ export function AppChrome({ config, models, activeId, onModel, onResetView }: Ap
         </nav>
       </div>
       <button type="button" className="toolbox-navigation" aria-label="Open Toolbox" aria-expanded={panel === 'toolbox'}
-        title="Edit model parameters" onClick={() => { setMenu(false); open(panel === 'toolbox' ? null : 'toolbox') }}>
-        <ToolboxIcon /><span>toolbox</span>
+        title="Customize this lab" onClick={() => { setMenu(false); open(panel === 'toolbox' ? null : 'toolbox') }}>
+        <ToolboxIcon /><span>customize</span>
       </button>
     </header>
     <FinderPortal>

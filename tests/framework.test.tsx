@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App'
 import { FormulaLibrary } from '../src/framework/FormulaLibrary'
 import { TimeSeriesChart } from '../src/framework/TimeSeriesChart'
+import { ParameterControl } from '../src/framework/ParameterControl'
 import { defineSimulation } from '../src/framework/model'
 import type { SimulationDefinition } from '../src/framework/types'
 import { models } from '../src/models'
@@ -26,6 +27,20 @@ function fixture(id = 'third-model'): SimulationDefinition {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('public model extension rendering', () => {
+  it('renders named choices as an accessible native select with the current option and its help', () => {
+    const html = renderToStaticMarkup(<ParameterControl definition={{
+      key: 'structure', label: 'Crystal structure', min: 0, max: 2, step: 1,
+      note: 'Choose the arrangement in the cell.',
+      options: [{ value: 0, label: 'Simple cubic (SC)' }, { value: 1, label: 'Body-centered cubic (BCC)' }, { value: 2, label: 'Face-centered cubic (FCC)' }],
+    }} value={1} onChange={() => {}} />)
+    expect(html).toContain('aria-label="Crystal structure"')
+    expect(html).toContain('<option value="1" selected="">Body-centered cubic (BCC)</option>')
+    expect(html).toContain('aria-describedby=')
+    expect(html).toContain('Choose the arrangement in the cell.')
+    expect(html).not.toContain('type="range"')
+    expect(html).not.toContain('type="number"')
+  })
+
   it('renders an arbitrary formula group containing a pipe without truncation or duplicate sections', () => {
     const model = fixture()
     const html = renderToStaticMarkup(<FormulaLibrary models={[model]} activeId={model.id} query="" onModel={() => {}} />)

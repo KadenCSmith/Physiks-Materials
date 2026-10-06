@@ -10,6 +10,7 @@ import { ParameterControl } from './framework/ParameterControl'
 import { FormulaLibrary } from './framework/FormulaLibrary'
 import { TimeSeriesChart } from './framework/TimeSeriesChart'
 import { useNumberFormat } from './framework/formatting'
+import { SnapshotExport } from './framework/SnapshotExport'
 
 validateAppConfig(appConfig, models)
 const storageKey = `${appConfig.id}:parameters:v1`
@@ -43,6 +44,10 @@ function Workspace() {
     if (!model.controls.some(control => control.key === key)) return
     setSessions(old => ({ ...old, [activeId]: sanitizeParameters(model, { ...old[activeId], [key]: value }) })); clock.reset()
   }, [model, activeId, clock.reset])
+  const updateMany = useCallback((values: Record<string, number>) => {
+    const declared = Object.fromEntries(Object.entries(values).filter(([key]) => model.controls.some(control => control.key === key)))
+    setSessions(old => ({ ...old, [activeId]: sanitizeParameters(model, { ...old[activeId], ...declared }) })); clock.reset()
+  }, [model, activeId, clock.reset])
   const restore = useCallback(() => { setSessions(old => ({ ...old, [activeId]: { ...model.defaults } })); clock.reset() }, [model, activeId, clock.reset])
   const resetView = useCallback(() => { setDisplay({ labels: true, forces: true }); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [])
   const startInteraction = useCallback(() => setInteracting(true), [])
@@ -67,18 +72,26 @@ function Workspace() {
   // identity so hidden controls, Finder math, and navigation are not reconciled
   // on every animation frame. Their own state/context updates still work.
   const chrome = useMemo(() => <AppChrome config={appConfig} models={models} activeId={activeId} onModel={selectModel} onResetView={resetView} />, [activeId, selectModel, resetView])
-  const toolbox = useMemo(() => <ToolboxPortal><section><p className="control-context">{model.title}</p><p>Changing a value restarts the model from its initial condition.</p>{model.controls.map(control => <ParameterControl key={`${model.id}-${control.key}`} definition={control} value={parameters[control.key]} onChange={value => update(control.key, value)} />)}<div className="toolbox-actions"><button onClick={restore}>Restore example values</button></div></section></ToolboxPortal>, [model, parameters, update, restore])
+  const toolbox = useMemo(() => {
+    const groups = new Map<string, typeof model.controls>()
+    model.controls.filter(control => !control.visibleWhen || control.visibleWhen(parameters)).forEach(control => {
+      const group = control.group ?? 'Model values'
+      groups.set(group, [...(groups.get(group) ?? []), control])
+    })
+    const Controls = model.Controls
+    return <ToolboxPortal><section><p className="control-context">{model.title}</p><p>Choose what to inspect, then edit its values. Changes restart the reveal and keep your Play/Pause choice.</p>{Array.from(groups, ([group, controls]) => <fieldset className="parameter-group" key={group}><legend>{group}</legend>{controls.map(control => <ParameterControl key={`${model.id}-${control.key}`} definition={control} value={parameters[control.key]} onChange={value => update(control.key, value)} />)}</fieldset>)}{Controls && <Controls key={model.id} parameters={parameters} snapshot={model.sample(parameters, 0)} onParameterChange={update} onParametersChange={updateMany} />}<div className="toolbox-actions"><button onClick={restore}>Restore exam example</button></div></section></ToolboxPortal>
+  }, [model, parameters, update, updateMany, restore])
   const toolboxExtras = useMemo(() => <ToolboxPortal extra><div className="toolbox-actions"><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>Diagram labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>Teaching overlays</button></div><p>Viewing speed and overlays are separate from the model’s values.</p></ToolboxPortal>, [display])
   const finder = useMemo(() => <FinderPortal documentation><FormulaLibrary models={models} activeId={activeId} query={ui.query} onModel={id => { selectModel(id); ui.open(null) }} /></FinderPortal>, [activeId, ui.query, ui.open, selectModel])
   const { Scene, Lesson, Details } = model
   return <>
     {chrome}
     <main className="simulation-workspace">
-      <div className="workspace-heading"><div><span className="eyebrow">{model.eyebrow ?? appConfig.title} / {String(models.indexOf(model)+1).padStart(2, '0')}</span><h1>{model.title}</h1><p>{model.description}</p></div></div>
+      <div className="workspace-heading"><div><span className="eyebrow">{model.eyebrow ?? appConfig.title} / {String(models.indexOf(model)+1).padStart(2, '0')}</span><h1>{model.title}</h1><p>{model.description}</p></div><SnapshotExport key={model.id} model={model} parameters={parameters} snapshot={snapshot} time={clock.time} display={display} /></div>
       <div className="workspace-grid">
         <div className="visual-workspace">
           <div className="scene-toolbar"><span>{model.interactionHint ?? 'Explore the current model in Toolbox'}</span><div><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>overlays</button></div></div>
-          <Scene parameters={parameters} snapshot={snapshot} display={display} onParameterChange={update} onInteractionStart={startInteraction} onInteractionEnd={endInteraction} />
+          <Scene parameters={parameters} snapshot={snapshot} display={display} onParameterChange={update} onInteractionStart={startInteraction} onInteractionEnd={endInteraction} onOpenControls={() => ui.open('toolbox')} />
           <div className="live-readouts" aria-label="Live model values">{readouts.map(readout => <div key={readout.label} className={`${readout.tone ?? 'neutral'}-readout`}><span>{readout.label}</span><output>{format(readout.value)}<small>{readout.unit ? ` ${readout.unit}` : ''}</small></output></div>)}</div>
           {Details && <Details parameters={parameters} snapshot={snapshot} time={clock.time} />}
           {playback.note && <p className="model-playback-note">{playback.note}</p>}

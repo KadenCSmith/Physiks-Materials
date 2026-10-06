@@ -6,9 +6,9 @@ Tested on the user's Mac in **Google Chrome / Kaden profile**, October 6, 2026. 
 
 | Check | Result |
 |---|---|
-| Runtime / lockfile | Node 26.8.2 satisfies ≥22.12.0; npm 11.19.1; `npm ci` succeeded; lockfile/dependency versions unchanged |
+| Runtime / lockfile | Node 26.8.2 satisfies ≥22.12.0; npm 11.19.1; `npm ci` succeeded; updated lockfile installed with npm ci; pinned html2canvas 1.4.1 added for local PDF export; other template versions retained |
 | `npm run check:models` during implementation | Passed: all four registered modules, valid defaults, numeric finite snapshots and supported parameter boundaries |
-| Final `npm run check` | Passed: type checking, lint, 3 scaffold tests, all **129 tests in 14 files**, production build |
+| Final `npm run check` | Passed: type checking, lint, 3 scaffold tests, all **172 tests in 18 files**, production build |
 | Mathematical tests | **22 domain tests**: signed indices, atom counts, BCC area density, effective charges and seven full balances, mass-action exponents, RDF radial weighting/coordination, seeded particles, signed circuit closure, phase fractions and endpoints, both components at both tangents, convex envelope |
 | Direction timing | 6-second direction window and matching sample progress; 12-second windows for other views; nonperiodic endpoints retained |
 | Change hygiene | `git diff --check` passed; raw course material under ignored `.local/` |
@@ -43,3 +43,11 @@ The published app was loaded in the same Chrome / Kaden profile. All four labs o
 - Graph boundaries remain approximate; no assessed thermodynamic dataset or quantitative defect kinetics was supplied. Gibbs curves, polymer mixture, overview and cooling are stated idealizations.
 - Native installers, signing/notarization, manual Windows/Linux/Safari checks, physical validation, FPS and measured learning gains were not run or claimed.
 - Production build and public Pages loading passed; the local `npm run preview` server was not separately started.
+
+## Customization and snapshot follow-up
+
+The notation and calculations were audited against the same 12-page exam and inspected lecture frames. Tests cover custom rational inputs, integerized plane levels, whole-number negative overbars, (200) versus (100), all 64 supported BCC neighbors, SF/RH Burgers vectors, nonfinite phase inputs, and the 1530 °C terminal endpoints.
+
+Chrome tests exercised a [−12 1 0] custom direction, invalid zero direction/normal, fractional intercepts (0.75,1,1) producing (4 3 3) at integer level3, and (200) at q=0/1/3. The q=0 case distinguishes contained axes; q=3 produces a valid equation but zero area in the cell. Enter submits a custom plane. Plane reveal at0 shows no boundary/fill; 7.2s has partial edges; 12s has all edges and fill. Named selectors show only relevant controls. At390×844 the customization dialog and document stay within390px.
+
+Actual Chrome PDF downloads were generated for all four labs and rendered with Poppler. Mathematical notation and formulas passed visual/scientific review. The exporter includes frozen diagrams, exact input notes, current results, lesson, methods, assumptions and references. Reports are A4 image-based PDFs; text is not selectable or searchable. Final repeated-header/footer fixes and the new plane-coordinate tables require a further downloaded-file check before claiming final formatting verification.

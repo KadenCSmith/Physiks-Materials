@@ -188,7 +188,7 @@ export function CinematicUIProvider({ children, config }: { children: ReactNode;
       role="dialog" aria-modal={panel ? true : undefined} aria-labelledby={headingId}
       aria-hidden={!panel} inert={!panel} data-panel={panel ?? 'closed'}>
       <header className="drawer-heading">
-        <div><span>{config.shortTitle}</span><h2 id={headingId}>{panel === 'finder' ? 'finder' : 'toolbox'}</h2></div>
+        <div><span>{config.shortTitle}</span><h2 id={headingId}>{panel === 'finder' ? 'finder' : 'customize'}</h2></div>
         <button type="button" aria-label="Close side panel" onClick={() => open(null)}><X size={25} strokeWidth={1} /></button>
       </header>
       <div className="drawer-content" hidden={panel !== 'finder'}>
@@ -204,8 +204,8 @@ export function CinematicUIProvider({ children, config }: { children: ReactNode;
         <div hidden={finderTab !== 'docs'} ref={docsRef} />
       </div>
       <div className="drawer-content" hidden={panel !== 'toolbox'}>
-        <div className="drawer-section-label">MODEL CONTROLS</div>
-        <p className="drawer-intro">Adjust the current model. Each value uses the units shown beside its control.</p>
+        <div className="drawer-section-label">YOUR LAB</div>
+        <p className="drawer-intro">Build an example and explore its result. Only controls for the current view are shown.</p>
         <div ref={toolsRef} />
         <div className="drawer-section-label drawer-extras-heading">MORE TOOLS</div>
         <DecimalPlacesControl />
