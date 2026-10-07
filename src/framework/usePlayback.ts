@@ -89,6 +89,10 @@ export function usePlayback(duration: number, {
     timeRef.current = 0
     setTime(0)
   }, [])
+  const replay = useCallback(() => {
+    reset()
+    setPlaying(true)
+  }, [reset])
 
   useEffect(() => {
     timeRef.current = clampPlaybackTime(timeRef.current, end)
@@ -111,5 +115,5 @@ export function usePlayback(duration: number, {
     })
   }, [playing, speed, end, loop, temporarilyPaused, disabled, visible, ended])
 
-  return { time: boundedTime, playing, speed, ended, setPlaying, setSpeed, seek, reset }
+  return { time: boundedTime, playing, speed, ended, setPlaying, setSpeed, seek, reset, replay }
 }

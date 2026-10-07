@@ -1,5 +1,6 @@
 import type {NumericParameters} from '../../framework/types'
-import {solidReadings,events} from './boundaries'
+import {solidReadings} from './boundaries'
+import {thermalCases,thermalEnergy} from './thermal'
 export const phaseNames=['(Cr)','Cr₄Pt','(Pt)','L']
 export function endpoints(T:number){if(!Number.isFinite(T)||T<1400||T>1530)throw new Error('Outside digitized solid slice.');let i=T<=1500?0:1;const a=solidReadings[i],b=solidReadings[i+1],f=(T-a[0])/(b[0]-a[0]);return [1,2,3,4].map(k=>a[k]+f*(b[k]-a[k]))}
 export function lever(c:number,a:number,b:number){if(![c,a,b].every(Number.isFinite)||!(b>a)||c<a||c>b)throw new Error('Composition must be inside a nonzero tie line.');const right=(c-a)/(b-a);return {left:1-right,right}}
@@ -22,5 +23,7 @@ export function gibbs(phase:number,x:number){return phase===0?kCr*(x-centerCr)**
 export function gibbsSlope(phase:number,x:number){return phase===0?2*kCr*(x-centerCr):phase===1?2*k*(x-center):2*kPt*(x-centerPt)}
 export function chemicalPotentials(phase:number,x:number){const g=gibbs(phase,x),slope=gibbsSlope(phase,x);return {Cr:g-x*slope,Pt:g+(1-x)*slope}}
 export function envelope(x:number){if(x<a)return gibbs(0,x);if(x<b)return gibbs(0,a)+mL*(x-a);if(x<c)return gibbs(1,x);if(x<d)return gibbs(1,c)+mR*(x-c);return gibbs(2,x)}
-export function sampleModel(p:NumericParameters,time:number){const progress=Math.min(1,Math.max(0,Number.isFinite(time)?time/12:0)),T=Math.round(p.view)===1?1400:p.temperature,eq=equilibrium(T,p.composition),event=events[Math.round(p.cooling)];return {...eq,temperature:T,composition:p.composition,freedom:3-eq.phases,conservation:eq.fractionValid?eq.fA*eq.left+eq.fB*eq.right-p.composition:0,progress,coolingTemperature:event.T+60-120*progress,invariantTemperature:event.T}}
-export const getPlayback=()=>({duration:12,loop:false,note:'Tie-line reveal or conceptual cooling across the selected reaction. No thermal rate or numerical Gibbs data are claimed.'})
+// Smooth metastable liquid branch, deliberately above the solid envelope at 1400 °C.
+export function liquidGibbs(x:number){return gCompound(c)+mR*(x-c)+200*(x-.281)**2+2}
+export function sampleModel(p:NumericParameters,time:number){const progress=Math.min(1,Math.max(0,Number.isFinite(time)?time/12:0)),T=Math.round(p.view)===1?1400:p.temperature,eq=equilibrium(T,p.composition),event=thermalCases[Math.round(p.cooling)],coolingTemperature=event.T+60-120*progress,energy=thermalEnergy(Math.round(p.cooling),coolingTemperature);return {...eq,temperature:T,composition:p.composition,components:p.composition===0?1:2,freedom:(p.composition===0?2:3)-eq.phases,conservation:eq.fractionValid?eq.fA*eq.left+eq.fB*eq.right-p.composition:0,progress,coolingTemperature,invariantTemperature:event.T,reactantG:energy.reactant,productG:energy.product,gap:energy.gap,thermalStable:energy.stable,transitionPhases:event.phaseCount,transitionComponents:event.components,transitionFreedom:event.components-event.phaseCount+1}}
+export const getPlayback=()=>({duration:12,loop:false,note:'Tie-line reveal or matched cooling/G–T marker. Conceptual 12-second demonstration, not a physical cooling rate. Gibbs energies are schematic.'})

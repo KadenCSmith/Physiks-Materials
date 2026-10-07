@@ -1,1 +1,13 @@
 @import '../shared/materials.css';
+.phase-calculation { border-top:1px solid var(--line); padding:1.4rem 0; }
+.phase-calculation h3 { margin:0 0 1rem; font-size:1.15rem; }
+.phase-calculation p { line-height:1.65; color:#b3becb; }
+.phase-calculation strong { color:#eee; }
+.phase-source-note { font-size:.86rem; }
+.phase-transition-choice { display:grid; gap:.7rem; margin:1rem 0; }
+.phase-transition-choice select { width:100%; min-height:44px; background:#111; color:#eee; border:1px solid #586779; padding:.7rem; font:inherit; }
+.phase-calculation .materials-facts { display:block; overflow-x:auto; }
+.phase-calculation .materials-facts th,.phase-calculation .materials-facts td { min-width:5rem; }
+.phase-calculation .materials-facts button { min-height:40px; white-space:nowrap; }
+
+.phase-labels-hidden text { visibility:hidden; }

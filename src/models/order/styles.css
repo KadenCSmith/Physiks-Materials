@@ -3,3 +3,7 @@
 .order-dislocation .order-tangent-label{fill:#91cbb5}
 .order-circuit-explanation{padding-top:12px}
 .order-circuit{margin-top:14px}
+.order-animation-controls{margin-top:20px;padding-top:14px;border-top:1px solid #27313d}
+.order-animation-controls .order-circuit-actions{margin:0 0 8px}
+.order-animation-controls .order-animate{padding:11px 15px;background:#182a43;border-color:#9db8e8;color:#e1ecff;font-size:12px}
+.order-animation-controls .order-animation-status{padding-bottom:0;margin:6px 0;line-height:1.65}

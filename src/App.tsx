@@ -53,9 +53,9 @@ function Workspace() {
   const startInteraction = useCallback(() => setInteracting(true), [])
   const endInteraction = useCallback(() => setInteracting(false), [])
   const togglePlayback = useCallback(() => {
-    if (clock.ended) { clock.reset(); clock.setPlaying(true) }
+    if (clock.ended) clock.replay()
     else clock.setPlaying(value => !value)
-  }, [clock.ended, clock.reset, clock.setPlaying])
+  }, [clock.ended, clock.replay, clock.setPlaying])
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement
@@ -91,7 +91,7 @@ function Workspace() {
       <div className="workspace-grid">
         <div className="visual-workspace">
           <div className="scene-toolbar"><span>{model.interactionHint ?? 'Explore the current model in Toolbox'}</span><div><button aria-pressed={display.labels} onClick={() => setDisplay(old => ({ ...old, labels: !old.labels }))}>labels</button><button aria-pressed={display.forces} onClick={() => setDisplay(old => ({ ...old, forces: !old.forces }))}>overlays</button></div></div>
-          <Scene parameters={parameters} snapshot={snapshot} display={display} onParameterChange={update} onInteractionStart={startInteraction} onInteractionEnd={endInteraction} onOpenControls={() => ui.open('toolbox')} onSeek={time => { clock.setPlaying(false); clock.seek(time) }} />
+          <Scene parameters={parameters} snapshot={snapshot} display={display} onParameterChange={update} onInteractionStart={startInteraction} onInteractionEnd={endInteraction} onOpenControls={() => ui.open('toolbox')} onSeek={time => { clock.setPlaying(false); clock.seek(time) }} playing={clock.playing && !clock.ended} onReplay={clock.replay} onTogglePlayback={togglePlayback} />
           <div className="live-readouts" aria-label="Live model values">{readouts.map(readout => <div key={readout.label} className={`${readout.tone ?? 'neutral'}-readout`}><span>{readout.label}</span><output>{format(readout.value)}<small>{readout.unit ? ` ${readout.unit}` : ''}</small></output></div>)}</div>
           {Details && <Details parameters={parameters} snapshot={snapshot} time={clock.time} />}
           {playback.note && <p className="model-playback-note">{playback.note}</p>}

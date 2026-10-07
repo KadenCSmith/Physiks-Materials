@@ -7,7 +7,7 @@ type Point=[number,number]
 const points=(values:Point[])=>values.map(v=>v.join(',')).join(' ')
 
 /** Physical identification and the independent step-count construction are deliberately separate. */
-export function DislocationScene({parameters:p,snapshot:s,display,onSeek}:Pick<SimulationSceneProps,'parameters'|'snapshot'|'display'|'onSeek'>){
+export function DislocationScene({parameters:p,snapshot:s,display,onSeek,playing=false,onReplay,onTogglePlayback}:Pick<SimulationSceneProps,'parameters'|'snapshot'|'display'|'onSeek'|'playing'|'onReplay'|'onTogglePlayback'>){
  const id=useId(),{format:n}=useNumberFormat(),screw=p.dislocation===0
  const path=circuitSteps(p.dislocation,1),f=Math.min(16,Math.max(0,s.progress*16))
  const segment=Math.min(15,Math.floor(f)),fraction=f-segment
@@ -24,11 +24,7 @@ export function DislocationScene({parameters:p,snapshot:s,display,onSeek}:Pick<S
  const heights=path.map((v,i):Point=>[466+225*i/16,478-73*v[0]])
  const heightTip:Point=[466+225*f/16,478-73*tip[0]]
  return <>
-  <div className="materials-tabs order-circuit-actions">
-   <button onClick={()=>onSeek?.(0)}>Restart circuit</button>
-   <button onClick={()=>onSeek?.(6)}>Inspect halfway</button>
-   <button onClick={()=>onSeek?.(12)}>Show Burgers gap</button>
-  </div>
+
   <svg className="materials-scene order-dislocation order-physical" viewBox="0 0 430 380" role="img" aria-label={screw?'Screw crystal cutaway: filled lattice walls and floor with a surface step ending at the dislocation core':'Edge crystal cross-section: an extra atomic half-plane terminates at the core'}>
    <defs>
     <marker id={`${id}-physical-trace`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#9db8e8"/></marker>
@@ -90,6 +86,16 @@ export function DislocationScene({parameters:p,snapshot:s,display,onSeek}:Pick<S
     </>}
    </>}
   </svg>
+  <div className="order-animation-controls" aria-label="Burgers circuit playback">
+   <div className="materials-tabs order-circuit-actions">
+    <button className="order-animate" onClick={onReplay} disabled={!onReplay}>Animate Burgers circuit</button>
+    <button onClick={onTogglePlayback} disabled={complete||!onTogglePlayback}>{playing?'Pause circuit':'Resume circuit'}</button>
+    <button onClick={()=>onSeek?.(0)}>Restart circuit</button>
+    <button onClick={()=>onSeek?.(6)}>Inspect halfway</button>
+    <button onClick={()=>onSeek?.(12)}>Show Burgers gap</button>
+   </div>
+   <p className="materials-note order-animation-status"><strong>{complete?'Circuit complete':playing?'Animating':'Paused'}</strong> · {complete?'16 neighbor bonds traced; inspect the gold start-to-finish Burgers gap.':`Leg ${leg+1} (${directions[leg]}) · bond ${Math.min(16,Math.floor(f)+1)} of 16.`} Animate starts from the first bond; Pause freezes the moving marker.</p>
+  </div>
   <svg className="materials-scene order-dislocation order-circuit" viewBox="0 0 760 440" role="img" aria-label={screw?'Separate Burgers circuit in the y-z projection, with a height chart showing its rise along x':'Separate Burgers circuit follows sixteen edge-lattice neighbors and leaves a horizontal start-to-finish gap'}>
    <defs>
     <marker id={`${id}-trace`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#9db8e8"/></marker>
@@ -118,10 +124,10 @@ export function DislocationScene({parameters:p,snapshot:s,display,onSeek}:Pick<S
     <circle cx={project([2.5,2,0])[0]} cy={project([2.5,2,0])[1]} r="8" fill="#111b26" stroke="#91cbb5"/><circle cx={project([2.5,2,0])[0]} cy={project([2.5,2,0])[1]} r="2" fill="#91cbb5"/>
     {display.labels&&<><text x="478" y="70">View along +z · x–y plane</text><text x="555" y="332">+x →</text><text x="430" y="170">+y ↑</text></>}
    </>}
-   {f>0&&<polyline points={points(trace.map(project))} stroke="#9db8e8" strokeWidth="3" fill="none" strokeLinejoin="round" markerEnd={`url(#${id}-trace)`}/>}
+   {f>0&&<polyline data-circuit-trace="true" points={points(trace.map(project))} stroke="#9db8e8" strokeWidth="3" fill="none" strokeLinejoin="round" markerEnd={`url(#${id}-trace)`}/>}
    <circle cx={start[0]} cy={start[1]} r="5" fill="#fff" stroke="#030303" strokeWidth="1.5"/>
-   <circle cx={project(tip)[0]} cy={project(tip)[1]} r="4" fill="#9db8e8" stroke="#030303"/>
-   {complete&&!screw&&<><line x1={start[0]} y1={start[1]} x2={finish[0]} y2={finish[1]} stroke="#e2bc82" strokeWidth="3.5" markerEnd={`url(#${id}-burgers)`}/><circle cx={finish[0]} cy={finish[1]} r="4" fill="#9db8e8"/></>}
+   <circle data-circuit-tip="true" cx={project(tip)[0]} cy={project(tip)[1]} r="5" fill="#9db8e8" stroke="#030303"/>
+   {complete&&!screw&&<><line data-burgers-gap="true" x1={start[0]} y1={start[1]} x2={finish[0]} y2={finish[1]} stroke="#e2bc82" strokeWidth="3.5" markerEnd={`url(#${id}-burgers)`}/><circle cx={finish[0]} cy={finish[1]} r="4" fill="#9db8e8"/></>}
    {display.labels&&<>
     <text x={screw?451:445} y="337">{screw?'S/F share y,z; their x differs by a.':'S'}</text>
     {complete&&!screw&&<text x={finish[0]+5} y={finish[1]-10}>F</text>}
@@ -132,8 +138,8 @@ export function DislocationScene({parameters:p,snapshot:s,display,onSeek}:Pick<S
     <path d="M466 395 V478 H700" fill="none" stroke="#758393"/>
     <polyline points={points(heights)} fill="none" stroke="#354352" strokeDasharray="4 3"/>
     <polyline points={points([...heights.slice(0,segment+1),heightTip])} fill="none" stroke="#9db8e8" strokeWidth="2.5"/>
-    <circle cx={heightTip[0]} cy={heightTip[1]} r="4" fill="#9db8e8"/>
-    {complete&&<line x1="713" y1="478" x2="713" y2="405" stroke="#e2bc82" strokeWidth="3" markerEnd={`url(#${id}-burgers)`}/>}
+    <circle data-circuit-height-tip="true" cx={heightTip[0]} cy={heightTip[1]} r="4" fill="#9db8e8"/>
+    {complete&&<line data-burgers-gap="true" x1="713" y1="478" x2="713" y2="405" stroke="#e2bc82" strokeWidth="3" markerEnd={`url(#${id}-burgers)`}/>}
     {display.labels&&<><text x="454" y="391">Height along line · x/a</text><text x="445" y="409">1</text><text x="445" y="482">0</text><text x="461" y="500">S · 0</text><text x="566" y="500">8</text><text x="670" y="500">16 · F</text><text x="495" y="524">One turn rises one spacing a.</text></>}
    </g>:display.labels&&<g transform="translate(-40,-140)">
     <text x="454" y="406">Four bonds on every side.</text>

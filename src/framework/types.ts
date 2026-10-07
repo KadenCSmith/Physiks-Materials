@@ -53,6 +53,10 @@ export interface SimulationSceneProps {
   onInteractionEnd: () => void
   onOpenControls?: () => void
   onSeek?: (time: number) => void
+  /** Shared clock state and actions; scenes must not create independent animation timers. */
+  playing?: boolean
+  onReplay?: () => void
+  onTogglePlayback?: () => void
 }
 export interface SimulationLessonProps {
   parameters: NumericParameters

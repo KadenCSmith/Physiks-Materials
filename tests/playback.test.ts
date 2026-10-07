@@ -82,6 +82,18 @@ describe('playback hook intent and server rendering', () => {
     expect(renderToStaticMarkup(createElement(Seeked))).toBe('<output>true|4|true|false</output>')
   })
 
+  it('replays a paused completed observation from zero while preserving the viewing speed', () => {
+    function Replayed() {
+      const p = usePlayback(12, { loop: false, defaultSpeed: 1 })
+      const [stage, setStage] = useState(0)
+      const [reachedPausedEnd, setReachedPausedEnd] = useState(false)
+      if (stage === 0) { p.seek(12); p.setPlaying(false); p.setSpeed(2); setStage(1) }
+      if (stage === 1) { setReachedPausedEnd(p.ended && !p.playing); p.replay(); setStage(2) }
+      return createElement('output', null, `${reachedPausedEnd}|${p.time}|${p.playing}|${p.speed}|${p.ended}`)
+    }
+    expect(renderToStaticMarkup(createElement(Replayed))).toBe('<output>true|0|true|2|false</output>')
+  })
+
   it('normalizes invalid speed edits while keeping a temporarily disabled autoplay intent', () => {
     function Disabled() {
       const p = usePlayback(0, { loop: false, temporarilyPaused: true, disabled: true, defaultSpeed: 0.25 })
